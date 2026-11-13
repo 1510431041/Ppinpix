@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Ppinpix.Theme</RootNamespace>
+    <AssemblyName>Ppinpix.Theme</AssemblyName>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Ppinpix.Core\Ppinpix.Core.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.Theme\Ppinpix.Theme.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.Capture\Ppinpix.Capture.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.Ocr\Ppinpix.Ocr.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.Pin\Ppinpix.Pin.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.LlmGateway\Ppinpix.LlmGateway.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.Translate\Ppinpix.Translate.csproj" />
+    <ProjectReference Include="..\..\src\Ppinpix.App\Ppinpix.App.csproj" />
+  </ItemGroup>
+</Project>

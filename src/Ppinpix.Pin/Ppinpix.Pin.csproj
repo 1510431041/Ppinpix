@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Ppinpix.Pin</RootNamespace>
+    <AssemblyName>Ppinpix.Pin</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ppinpix.Core\Ppinpix.Core.csproj" />
+    <ProjectReference Include="..\Ppinpix.Theme\Ppinpix.Theme.csproj" />
+    <ProjectReference Include="..\Ppinpix.Capture\Ppinpix.Capture.csproj" />
+    <ProjectReference Include="..\Ppinpix.Ocr\Ppinpix.Ocr.csproj" />
+  </ItemGroup>
+</Project>

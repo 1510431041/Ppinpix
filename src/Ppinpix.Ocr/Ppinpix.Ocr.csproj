@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>Ppinpix.Ocr</RootNamespace>
+    <AssemblyName>Ppinpix.Ocr</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ppinpix.Ocr.Tests" />
+    <ProjectReference Include="..\Ppinpix.Core\Ppinpix.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RapidOcrNet" Version="4.1.0" />
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+    <PackageReference Include="ZXing.Net" Version="0.16.11" />
+  </ItemGroup>
+</Project>

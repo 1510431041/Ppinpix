@@ -1,0 +1,227 @@
+<UserControl x:Class="Ppinpix.App.Settings.TranslateSettingsPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190" />
+            <ColumnDefinition Width="14" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- 左侧：配置档案列表与导出/导入 -->
+        <DockPanel Grid.Column="0" LastChildFill="True">
+            <StackPanel DockPanel.Dock="Bottom" Margin="0,8,0,0">
+                <UniformGrid Columns="3" Margin="0,0,0,6">
+                    <Button Content="新增" Margin="0,0,3,0" Padding="4,5" Click="OnAddProfileClick" />
+                    <Button Content="复制" Margin="2,0,2,0" Padding="4,5" Click="OnCloneProfileClick" />
+                    <Button Content="删除" Margin="3,0,0,0" Padding="4,5" Click="OnDeleteProfileClick" />
+                </UniformGrid>
+                <UniformGrid Columns="2">
+                    <Button Content="导出 JSON" Margin="0,0,3,0" Padding="4,5" Click="OnExportProfilesClick" />
+                    <Button Content="导入 JSON" Margin="3,0,0,0" Padding="4,5" Click="OnImportProfilesClick" />
+                </UniformGrid>
+            </StackPanel>
+
+            <ListBox x:Name="ProfileListBox"
+                     SelectionChanged="OnProfileSelected"
+                     Padding="4"
+                     Background="{DynamicResource Pp.Settings.Card}"
+                     BorderBrush="{DynamicResource Pp.Settings.Border}"
+                     BorderThickness="1"
+                     Foreground="{DynamicResource Pp.Settings.Text}" />
+        </DockPanel>
+
+        <!-- 右侧：当前选中配置编辑区 -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,6,12">
+                <DockPanel Margin="0,0,0,10">
+                    <Button x:Name="SetDefaultBtn"
+                            DockPanel.Dock="Right"
+                            Content="设为当前默认翻译配置"
+                            Padding="10,5"
+                            Click="OnSetDefaultClick" />
+                    <TextBlock Text="接口配置详情"
+                               FontSize="14.5"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource Pp.Settings.Text}" />
+                </DockPanel>
+
+                <TextBlock Text="配置名称" Margin="0,4,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                <TextBox x:Name="NameBox" Padding="8,5" TextChanged="OnFieldChanged" />
+
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="协议类型" Margin="0,0,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                        <ComboBox x:Name="ProtocolCombo" Padding="8,5" SelectionChanged="OnFieldChanged">
+                            <ComboBoxItem Content="OpenAI 兼容 (网关/DeepSeek/v1)" Tag="OpenAiCompatible" />
+                            <ComboBoxItem Content="Anthropic Messages" Tag="AnthropicMessages" />
+                            <ComboBoxItem Content="Google Gemini 原生" Tag="Gemini" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="翻译默认呈现" Margin="0,0,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                        <ComboBox x:Name="PresentationCombo" Padding="8,5" SelectionChanged="OnGlobalTranslateChanged">
+                            <ComboBoxItem Content="原位覆盖贴图（默认）" Tag="Overlay" />
+                            <ComboBoxItem Content="对照浮窗" Tag="Compare" />
+                        </ComboBox>
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock Text="接口地址 (Base URL)" Margin="0,8,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                <TextBox x:Name="BaseUrlBox" Padding="8,5" TextChanged="OnFieldChanged" />
+                <CheckBox x:Name="AutoAppendCheck"
+                          Content="自动在 Base URL 后补全接口路径（如 /chat/completions）"
+                          Margin="0,5,0,0"
+                          Foreground="{DynamicResource Pp.Settings.Text}"
+                          Checked="OnFieldChanged"
+                          Unchecked="OnFieldChanged" />
+
+                <TextBlock Text="模型名称" Margin="0,8,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                <DockPanel LastChildFill="True">
+                    <Button DockPanel.Dock="Right"
+                            x:Name="FetchModelsBtn"
+                            Content="拉取模型"
+                            Padding="10,5"
+                            Margin="8,0,0,0"
+                            Click="OnFetchModelsClick" />
+                    <ComboBox x:Name="ModelCombo"
+                              IsEditable="True"
+                              Padding="8,5"
+                              LostFocus="OnFieldChanged"
+                              SelectionChanged="OnFieldChanged" />
+                </DockPanel>
+
+                <TextBlock Text="API 密钥（DPAPI 本机加密存储）" Margin="0,8,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                <DockPanel LastChildFill="True">
+                    <Button DockPanel.Dock="Right"
+                            x:Name="RevealKeyBtn"
+                            Content="显示密钥"
+                            Padding="10,5"
+                            Margin="8,0,0,0"
+                            Click="OnToggleRevealKeyClick" />
+                    <Grid>
+                        <PasswordBox x:Name="ApiKeyPwdBox" Padding="8,5" PasswordChanged="OnApiKeyChanged" />
+                        <TextBox x:Name="ApiKeyPlainBox" Padding="8,5" Visibility="Collapsed" IsReadOnly="True" />
+                    </Grid>
+                </DockPanel>
+
+                <DockPanel Margin="0,10,0,0">
+                    <Button DockPanel.Dock="Left"
+                            x:Name="TestConnBtn"
+                            Content="测试连接"
+                            Padding="14,6"
+                            Background="#FF2F80FF"
+                            Foreground="White"
+                            BorderThickness="0"
+                            FontWeight="SemiBold"
+                            Click="OnTestConnectionClick" />
+                    <TextBlock x:Name="TestStatusText"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               FontSize="12"
+                               Foreground="{DynamicResource Pp.Settings.Muted}" />
+                </DockPanel>
+
+                <Grid Margin="0,12,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="默认输入方式" Margin="0,0,0,3" Foreground="{DynamicResource Pp.Settings.Muted}" FontSize="12" />
+                        <ComboBox x:Name="InputModeCombo" Padding="8,5" SelectionChanged="OnFieldChanged">
+                            <ComboBoxItem Content="先本地 OCR 再翻译文字" Tag="OcrThenTranslate" />
+                            <ComboBoxItem Content="直接发送图片 (需多模态)" Tag="ImageDirectly" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Margin="0,0,0,4">
+                        <CheckBox x:Name="SupportsVisionCheck"
+                                  Content="当前模型支持图片输入 (Vision)"
+                                  Foreground="{DynamicResource Pp.Settings.Text}"
+                                  Checked="OnFieldChanged"
+                                  Unchecked="OnFieldChanged" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 代理与高级参数 -->
+                <Expander Header="网络代理与高级参数（温度 / 超时 / 提示词）"
+                          Margin="0,12,0,0"
+                          Foreground="{DynamicResource Pp.Settings.Text}">
+                    <StackPanel Margin="0,8,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="130" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="78" />
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="ProxyModeCombo" Grid.Column="0" Padding="6,4" SelectionChanged="OnFieldChanged">
+                                <ComboBoxItem Content="跟随系统代理" Tag="System" />
+                                <ComboBoxItem Content="直连（不用代理）" Tag="None" />
+                                <ComboBoxItem Content="HTTP 代理" Tag="Http" />
+                                <ComboBoxItem Content="SOCKS5 代理" Tag="Socks5" />
+                            </ComboBox>
+                            <TextBox x:Name="ProxyHostBox" Grid.Column="2" Padding="6,4" ToolTip="代理主机 IP 或域名" TextChanged="OnFieldChanged" />
+                            <TextBox x:Name="ProxyPortBox" Grid.Column="4" Padding="6,4" ToolTip="端口" TextChanged="OnFieldChanged" />
+                        </Grid>
+
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="8" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="ProxyUserBox" Grid.Column="0" Padding="6,4" ToolTip="代理用户名（可选）" TextChanged="OnFieldChanged" />
+                            <PasswordBox x:Name="ProxyPwdBox" Grid.Column="2" Padding="6,4" ToolTip="代理密码（可选，DPAPI 加密）" PasswordChanged="OnProxyPwdChanged" />
+                        </Grid>
+
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="10" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Temperature" FontSize="11.5" Foreground="{DynamicResource Pp.Settings.Muted}" />
+                                <TextBox x:Name="TempBox" Padding="6,4" TextChanged="OnFieldChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Timeout (秒)" FontSize="11.5" Foreground="{DynamicResource Pp.Settings.Muted}" />
+                                <TextBox x:Name="TimeoutBox" Padding="6,4" TextChanged="OnFieldChanged" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="4" VerticalAlignment="Bottom">
+                                <CheckBox x:Name="StreamCheck"
+                                          Content="流式输出"
+                                          Foreground="{DynamicResource Pp.Settings.Text}"
+                                          Checked="OnFieldChanged"
+                                          Unchecked="OnFieldChanged" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="自定义提示词模板（留空使用内置；可用 {source_lang} {target_lang} {text}）"
+                                   Margin="0,8,0,3"
+                                   FontSize="11.5"
+                                   Foreground="{DynamicResource Pp.Settings.Muted}" />
+                        <TextBox x:Name="PromptBox"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Height="64"
+                                 Padding="6,4"
+                                 TextChanged="OnFieldChanged" />
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

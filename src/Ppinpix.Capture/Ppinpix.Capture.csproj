@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Ppinpix.Capture</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Ppinpix.Capture.Tests" />
+    <ProjectReference Include="..\Ppinpix.Core\Ppinpix.Core.csproj" />
+    <ProjectReference Include="..\Ppinpix.Theme\Ppinpix.Theme.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.1" />
+  </ItemGroup>
+
+</Project>

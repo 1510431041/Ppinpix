@@ -1,0 +1,286 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        颜色取自 docs/UI_VISUAL.md。这些字面值与 Ppinpix.Theme.Tokens 中的 Color 一一对应，
+        由 tests/Ppinpix.Theme.Tests/ThemeConsistencyTests.cs 自动校验，改一处必须改另一处。
+    -->
+
+    <!-- ============ 品牌色 ============ -->
+    <SolidColorBrush x:Key="Pp.Accent" Color="#FF2F80FF" />
+    <SolidColorBrush x:Key="Pp.AccentHover" Color="#FF5A9BFF" />
+    <SolidColorBrush x:Key="Pp.AccentPressed" Color="#FF1F66D9" />
+    <SolidColorBrush x:Key="Pp.OnAccent" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="Pp.AccentSoft" Color="#2E2F80FF" />
+
+    <!-- ============ 浮层（深色） ============ -->
+    <SolidColorBrush x:Key="Pp.Surface" Color="#F01F2329" />
+    <SolidColorBrush x:Key="Pp.SurfaceRaised" Color="#FF2A2F37" />
+    <SolidColorBrush x:Key="Pp.SurfaceHover" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="Pp.SurfacePressed" Color="#24FFFFFF" />
+    <SolidColorBrush x:Key="Pp.Stroke" Color="#1AFFFFFF" />
+    <SolidColorBrush x:Key="Pp.GridLine" Color="#1FFFFFFF" />
+    <SolidColorBrush x:Key="Pp.Dim" Color="#73000000" />
+
+    <!-- ============ 文字 ============ -->
+    <SolidColorBrush x:Key="Pp.TextPrimary" Color="#FFF2F4F7" />
+    <SolidColorBrush x:Key="Pp.TextSecondary" Color="#FFA3ABB8" />
+    <SolidColorBrush x:Key="Pp.TextDisabled" Color="#FF5C6370" />
+
+    <!-- ============ 语义色 ============ -->
+    <SolidColorBrush x:Key="Pp.Success" Color="#FF2EB872" />
+    <SolidColorBrush x:Key="Pp.Warning" Color="#FFF5A524" />
+    <SolidColorBrush x:Key="Pp.Danger" Color="#FFF04438" />
+
+    <!-- ============ 设置窗口 · 浅色 ============ -->
+    <SolidColorBrush x:Key="Pp.Light.WindowBg" Color="#FFF5F6F8" />
+    <SolidColorBrush x:Key="Pp.Light.CardBg" Color="#FFFFFFFF" />
+    <SolidColorBrush x:Key="Pp.Light.CardStroke" Color="#FFE3E6EB" />
+    <SolidColorBrush x:Key="Pp.Light.NavSelectedBg" Color="#1F2F80FF" />
+    <SolidColorBrush x:Key="Pp.Light.TextPrimary" Color="#FF1B1F24" />
+    <SolidColorBrush x:Key="Pp.Light.TextSecondary" Color="#FF5F6B7A" />
+
+    <!-- ============ 设置窗口 · 深色 ============ -->
+    <SolidColorBrush x:Key="Pp.Dark.WindowBg" Color="#FF191C21" />
+    <SolidColorBrush x:Key="Pp.Dark.CardBg" Color="#FF22262D" />
+    <SolidColorBrush x:Key="Pp.Dark.CardStroke" Color="#14FFFFFF" />
+    <SolidColorBrush x:Key="Pp.Dark.NavSelectedBg" Color="#382F80FF" />
+    <SolidColorBrush x:Key="Pp.Dark.TextPrimary" Color="#FFF2F4F7" />
+    <SolidColorBrush x:Key="Pp.Dark.TextSecondary" Color="#FFA3ABB8" />
+
+    <!-- ============ 字体 ============ -->
+    <FontFamily x:Key="Pp.UiFont">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Pp.MonoFont">Cascadia Mono, Consolas, Courier New</FontFamily>
+    <FontFamily x:Key="Pp.IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+
+    <!-- ============ 图标文字 ============ -->
+    <Style x:Key="Pp.IconText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Pp.IconFont}" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal" />
+    </Style>
+
+    <!-- ============ 等宽小字（坐标 / 色值 / 尺寸） ============ -->
+    <Style x:Key="Pp.MonoText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Pp.MonoFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="Pp.CaptionText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource Pp.UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextSecondary}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ============ 工具栏按钮（32×32，圆角 6） ============ -->
+    <Style x:Key="Pp.ToolButton" TargetType="Button">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.SurfaceHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.SurfacePressed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource Pp.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 强调按钮（完成 ✓） ============ -->
+    <Style x:Key="Pp.ToolButtonAccent" TargetType="Button" BasedOn="{StaticResource Pp.ToolButton}">
+        <Setter Property="Background" Value="{StaticResource Pp.Accent}" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.OnAccent}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="6"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.AccentHover}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.AccentPressed}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.SurfacePressed}" />
+                            <Setter Property="Foreground" Value="{StaticResource Pp.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 浮层面板（工具栏 / 菜单 / 浮窗底） ============ -->
+    <Style x:Key="Pp.ToolbarPanel" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource Pp.Surface}" />
+        <Setter Property="BorderBrush" Value="{StaticResource Pp.Stroke}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- ============ 组间分隔线（1 × 20） ============ -->
+    <Style x:Key="Pp.ToolbarSeparator" TargetType="Border">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Background" Value="{StaticResource Pp.Stroke}" />
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- ============ 悬停提示 ============ -->
+    <Style x:Key="Pp.ToolTip" TargetType="ToolTip">
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="FontFamily" Value="{StaticResource Pp.UiFont}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border Background="{StaticResource Pp.Surface}"
+                            BorderBrush="{StaticResource Pp.Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="8,4">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============ 浮层右键菜单（UI_VISUAL.md 7.7） ============ -->
+    <Style x:Key="Pp.ContextMenu" TargetType="ContextMenu">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="FontFamily" Value="{StaticResource Pp.UiFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="HasDropShadow" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContextMenu">
+                    <Border Background="{StaticResource Pp.Surface}"
+                            BorderBrush="{StaticResource Pp.Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="4"
+                            Margin="6">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="18" ShadowDepth="6" Direction="270" Opacity="0.35" Color="Black" />
+                        </Border.Effect>
+                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Pp.MenuSeparator" TargetType="Separator">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Margin" Value="8,4" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Separator">
+                    <Border Height="1" Background="{StaticResource Pp.Stroke}" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Pp.MenuItem" TargetType="MenuItem">
+        <Setter Property="OverridesDefaultStyle" Value="True" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Foreground" Value="{StaticResource Pp.TextPrimary}" />
+        <Setter Property="FontFamily" Value="{StaticResource Pp.UiFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="MenuItem">
+                    <Border x:Name="Bd"
+                            Background="Transparent"
+                            CornerRadius="6"
+                            Padding="12,0"
+                            MinWidth="188">
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter x:Name="IconHost"
+                                              Grid.Column="0"
+                                              ContentSource="Icon"
+                                              HorizontalAlignment="Left"
+                                              VerticalAlignment="Center" />
+                            <TextBlock x:Name="CheckGlyph"
+                                       Grid.Column="0"
+                                       FontFamily="{StaticResource Pp.IconFont}"
+                                       FontSize="13"
+                                       Text="&#xE73E;"
+                                       Foreground="{StaticResource Pp.Accent}"
+                                       VerticalAlignment="Center"
+                                       Visibility="Collapsed" />
+                            <ContentPresenter Grid.Column="1"
+                                              ContentSource="Header"
+                                              RecognizesAccessKey="True"
+                                              VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="2"
+                                       Text="{TemplateBinding InputGestureText}"
+                                       Foreground="{StaticResource Pp.TextSecondary}"
+                                       FontSize="12"
+                                       Margin="16,0,0,0"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="CheckGlyph" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="IconHost" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsHighlighted" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{StaticResource Pp.SurfaceHover}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource Pp.TextDisabled}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,51 @@
+## .NET / MSBuild 构建产物
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+[Pp]ublish/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+project.lock.json
+project.assets.json
+*.nuget.props
+*.nuget.targets
+
+## 测试与覆盖率结果
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+coverage*.json
+coverage*.xml
+coverage*.info
+*.trx
+*.coverage
+*.coveragexml
+
+## IDE 与本地工具目录
+.vs/
+.vscode/
+.idea/
+.claude/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+## 运行时缓存、日志与临时文件
+*.log
+*.tmp
+*.bak
+*.swp
+*.corrupted
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+## 本地私密或环境配置
+*.local.json
+secrets.json
