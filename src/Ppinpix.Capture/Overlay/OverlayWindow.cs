@@ -177,6 +177,16 @@ internal sealed class OverlayWindow : Window
         SyncLayout();
     }
 
+    /// <summary>Shift+F1 重新抓取画面后替换冻结底帧并同步标注层源图。</summary>
+    public void UpdateFrozenFrame(ScreenFrame newFrame)
+    {
+        _frameBounds = _monitor.Bounds;
+        _frameImage.Source = FrameBitmap.GetMonitorView(newFrame, _monitor);
+        _surface.SetFrameBounds(_monitor.Bounds);
+        _annotationLayer.UpdateSource(newFrame, _monitor.Bounds);
+        SyncLayout();
+    }
+
     public void SetCursorPosition(PxPoint cursor) => _lastCursor = cursor;
 
     private void OnLoaded(object sender, RoutedEventArgs e) => SyncLayout();
@@ -343,7 +353,8 @@ internal sealed class OverlayWindow : Window
         ShapeHandleKind.TopRight or ShapeHandleKind.BottomLeft => Cursors.SizeNESW,
         ShapeHandleKind.Top or ShapeHandleKind.Bottom => Cursors.SizeNS,
         ShapeHandleKind.Left or ShapeHandleKind.Right => Cursors.SizeWE,
-        ShapeHandleKind.Start or ShapeHandleKind.End => Cursors.SizeAll,
+        ShapeHandleKind.Start or ShapeHandleKind.End or ShapeHandleKind.Center or ShapeHandleKind.CurveControl or ShapeHandleKind.TailEnd => Cursors.SizeAll,
+        ShapeHandleKind.CornerRadius => Cursors.SizeWE,
         _ => Cursors.Arrow,
     };
 

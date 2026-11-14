@@ -19,6 +19,10 @@ public enum ShapeHandleKind
     Left,
     Start,
     End,
+    Center,
+    CurveControl,
+    TailEnd,
+    CornerRadius,
 }
 
 /// <summary>单个控制点的物理像素位置与类型。</summary>

@@ -59,6 +59,62 @@ public static class GeometryHelper
         new(ShapeHandleKind.Left, r.Left, r.CenterY),
     ];
 
+    public static double ClampCornerRadius(RectF r, double requestedRadius) =>
+        Math.Clamp(requestedRadius, 0, Math.Min(r.Width, r.Height) * 0.5);
+
+    public static IReadOnlyList<ShapeHandle> GetBoxHandlesWithCornerRadius(RectF r, double cornerRadius)
+    {
+        var list = new List<ShapeHandle>(9)
+        {
+            new(ShapeHandleKind.TopLeft, r.Left, r.Top),
+            new(ShapeHandleKind.Top, r.CenterX, r.Top),
+            new(ShapeHandleKind.TopRight, r.Right, r.Top),
+            new(ShapeHandleKind.Right, r.Right, r.CenterY),
+            new(ShapeHandleKind.BottomRight, r.Right, r.Bottom),
+            new(ShapeHandleKind.Bottom, r.CenterX, r.Bottom),
+            new(ShapeHandleKind.BottomLeft, r.Left, r.Bottom),
+            new(ShapeHandleKind.Left, r.Left, r.CenterY),
+        };
+        if (r.Width >= 60 && r.Height >= 48)
+        {
+            double clamped = ClampCornerRadius(r, cornerRadius);
+            double hx = Math.Clamp(r.Left + 16 + clamped * 0.65, r.Left + 16, r.CenterX - 10);
+            list.Add(new(ShapeHandleKind.CornerRadius, hx, r.Top + 14));
+        }
+        return list;
+    }
+
+    public static double ComputeCornerRadiusFromHandle(RectF r, double x)
+    {
+        double maxR = Math.Min(r.Width, r.Height) * 0.5;
+        double raw = Math.Clamp((x - r.Left - 16) / 0.65, 0, maxR);
+        return raw < 2.0 ? 0 : Math.Round(raw);
+    }
+
+    public static double DistancePointToQuadraticBezier(
+        double px, double py,
+        double x1, double y1,
+        double cx, double cy,
+        double x2, double y2,
+        int segments = 16)
+    {
+        double minDist = double.MaxValue;
+        double prevX = x1;
+        double prevY = y1;
+        for (int i = 1; i <= segments; i++)
+        {
+            double t = (double)i / segments;
+            double mt = 1.0 - t;
+            double nx = mt * mt * x1 + 2.0 * mt * t * cx + t * t * x2;
+            double ny = mt * mt * y1 + 2.0 * mt * t * cy + t * t * y2;
+            double d = DistancePointToSegment(px, py, prevX, prevY, nx, ny);
+            if (d < minDist) minDist = d;
+            prevX = nx;
+            prevY = ny;
+        }
+        return minDist;
+    }
+
     public static RectF MoveBoxHandle(RectF origin, ShapeHandleKind kind, double x, double y, bool constrain, double minSize = 4)
     {
         double left = origin.Left;
@@ -201,5 +257,36 @@ public static class GeometryHelper
         byte b = (byte)(argb & 0xFF);
         double lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
         return lum > 0.68;
+    }
+
+    public static void DrawClippedPatch(
+        SKCanvas canvas,
+        SKBitmap patch,
+        Core.Geometry.PxRect clamped,
+        RectF shapeRect,
+        double cornerRadius,
+        double originX,
+        double originY)
+    {
+        float radius = (float)ClampCornerRadius(shapeRect, cornerRadius);
+        float px = (float)(clamped.X - originX);
+        float py = (float)(clamped.Y - originY);
+        if (radius > 0.5f)
+        {
+            var clipRect = SKRect.Create(
+                (float)(shapeRect.X - originX),
+                (float)(shapeRect.Y - originY),
+                (float)shapeRect.Width,
+                (float)shapeRect.Height);
+            canvas.Save();
+            using var rr = new SKRoundRect(clipRect, radius, radius);
+            canvas.ClipRoundRect(rr, SKClipOperation.Intersect, antialias: true);
+            canvas.DrawBitmap(patch, px, py);
+            canvas.Restore();
+        }
+        else
+        {
+            canvas.DrawBitmap(patch, px, py);
+        }
     }
 }

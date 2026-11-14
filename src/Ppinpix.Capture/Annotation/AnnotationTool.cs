@@ -41,4 +41,7 @@ public enum AnnotationTool
 
     /// <summary>橡皮擦（点击或划过标注删除）。</summary>
     Eraser = 12,
+
+    /// <summary>聚光灯（暗化选区其余部分，保留聚光区域原始亮度，快捷键 K）。</summary>
+    Spotlight = 13,
 }

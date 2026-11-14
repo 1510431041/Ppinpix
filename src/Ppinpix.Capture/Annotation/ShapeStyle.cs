@@ -38,6 +38,9 @@ public sealed record ShapeStyle
     /// <summary>高斯模糊半径（6 / 12 / 20）。</summary>
     public int BlurRadius { get; init; } = 12;
 
+    /// <summary>圆角半径（物理像素，适用于矩形 / 马赛克 / 模糊 / 聚光灯，0 = 直角）。</summary>
+    public double CornerRadius { get; init; } = 0;
+
     public static ShapeStyle FromSettings(Ppinpix.Core.Settings.AnnotationSettings s) => new()
     {
         Argb = ParseHexColor(s.DefaultColorHex, 0xFFF04438),

@@ -177,6 +177,7 @@ public sealed class PinAnnotationWindow : Window, ICaptureToolbarActions
             case Key.Enter: Accept(); e.Handled = true; break;
             case Key.Z when ctrl: Undo(); e.Handled = true; break;
             case Key.Y when ctrl: Redo(); e.Handled = true; break;
+            case Key.K when !ctrl: SelectTool(AnnotationTool.Spotlight); e.Handled = true; break;
             case Key.Delete: _editor.DeleteSelected(); e.Handled = true; break;
         }
     }
@@ -210,6 +211,7 @@ public sealed class PinAnnotationWindow : Window, ICaptureToolbarActions
     public void Copy() { }
     public void Save() { }
     public void Pin() { }
+    public void Longshot() { }
     public void Ocr() { }
     public void Translate() { }
     public void Cancel() { DialogResult = false; Close(); }

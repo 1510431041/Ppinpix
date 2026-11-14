@@ -8,6 +8,7 @@ using Ppinpix.Capture.Session;
 using Ppinpix.Core;
 using Ppinpix.Core.Display;
 using Ppinpix.Core.Geometry;
+using Ppinpix.Core.Settings;
 using Ppinpix.Theme;
 
 namespace Ppinpix.Capture.Overlay;
@@ -31,9 +32,13 @@ internal sealed class CaptureToolbar : Window
 
     public PxRect PlacedBounds { get; private set; }
 
-    public CaptureToolbar(ICaptureToolbarActions actions, bool annotationOnly = false)
+    public CaptureToolbar(
+        ICaptureToolbarActions actions,
+        bool annotationOnly = false,
+        ToolbarVisibilitySettings? visibility = null)
     {
         _actions = actions;
+        var vis = visibility ?? new ToolbarVisibilitySettings();
 
         WindowStyle = WindowStyle.None;
         ResizeMode = ResizeMode.NoResize;
@@ -53,48 +58,63 @@ internal sealed class CaptureToolbar : Window
 
         if (Features.Annotate || annotationOnly)
         {
-            AddTool(buttons, AnnotationTool.Select, "选择 / 移动标注", "V", BuildPointerVector());
-            AddTool(buttons, AnnotationTool.Rectangle, "矩形", "R", BuildRectVector());
-            AddTool(buttons, AnnotationTool.Ellipse, "椭圆", "O", BuildEllipseVector());
-            AddTool(buttons, AnnotationTool.Arrow, "箭头", "A", MakeGlyph(Icons.Arrow));
-            AddTool(buttons, AnnotationTool.Line, "直线", "L", BuildLineVector());
-            AddTool(buttons, AnnotationTool.Freehand, "画笔", "P", MakeGlyph(Icons.Edit));
-            AddTool(buttons, AnnotationTool.NumberBadge, "序号标记", "N", BuildBadgeVector());
-            AddTool(buttons, AnnotationTool.Text, "文字标注", "T", BuildTextVector());
-            AddTool(buttons, AnnotationTool.Mosaic, "马赛克 / 模糊", "M", BuildMosaicVector());
-            AddTool(buttons, AnnotationTool.Highlight, "荧光笔", "H", MakeGlyph(Icons.Highlight));
-            AddTool(buttons, AnnotationTool.Eraser, "橡皮擦", "E", MakeGlyph(Icons.Eraser));
+            if (vis.ShowSelect) AddTool(buttons, AnnotationTool.Select, "选择 / 移动标注", "V", BuildPointerVector());
+            if (vis.ShowRectangle) AddTool(buttons, AnnotationTool.Rectangle, "矩形", "R", BuildRectVector());
+            if (vis.ShowEllipse) AddTool(buttons, AnnotationTool.Ellipse, "椭圆", "O", BuildEllipseVector());
+            if (vis.ShowArrow) AddTool(buttons, AnnotationTool.Arrow, "箭头（拖动中点弯曲，双击还原）", "A", MakeGlyph(Icons.Arrow));
+            if (vis.ShowLine) AddTool(buttons, AnnotationTool.Line, "直线", "L", BuildLineVector());
+            if (vis.ShowFreehand) AddTool(buttons, AnnotationTool.Freehand, "画笔", "P", MakeGlyph(Icons.Edit));
+            if (vis.ShowNumberBadge) AddTool(buttons, AnnotationTool.NumberBadge, "序号标记（按住拖出指针箭头）", "N", BuildBadgeVector());
+            if (vis.ShowText) AddTool(buttons, AnnotationTool.Text, "文字标注", "T", BuildTextVector());
+            if (vis.ShowMosaic) AddTool(buttons, AnnotationTool.Mosaic, "马赛克 / 模糊", "M", BuildMosaicVector());
+            if (vis.ShowSpotlight) AddTool(buttons, AnnotationTool.Spotlight, "聚光灯", "K", BuildSpotlightVector());
+            if (vis.ShowHighlight) AddTool(buttons, AnnotationTool.Highlight, "荧光笔", "H", MakeGlyph(Icons.Highlight));
+            if (vis.ShowEraser) AddTool(buttons, AnnotationTool.Eraser, "橡皮擦", "E", MakeGlyph(Icons.Eraser));
 
-            buttons.Children.Add(UiFactory.Separator());
+            if (vis.ShowUndoRedo)
+            {
+                AddSeparatorIfNeeded(buttons);
+                _undoButton = UiFactory.IconButton(Icons.Undo, "撤销", () => _actions.Undo(), shortcut: "Ctrl+Z");
+                _redoButton = UiFactory.IconButton(Icons.Redo, "重做", () => _actions.Redo(), shortcut: "Ctrl+Y");
+                buttons.Children.Add(_undoButton);
+                buttons.Children.Add(_redoButton);
+            }
 
-            _undoButton = UiFactory.IconButton(Icons.Undo, "撤销", () => _actions.Undo(), shortcut: "Ctrl+Z");
-            _redoButton = UiFactory.IconButton(Icons.Redo, "重做", () => _actions.Redo(), shortcut: "Ctrl+Y");
-            buttons.Children.Add(_undoButton);
-            buttons.Children.Add(_redoButton);
-            buttons.Children.Add(UiFactory.Separator());
+            AddSeparatorIfNeeded(buttons);
         }
 
         if (!annotationOnly)
         {
-            buttons.Children.Add(UiFactory.IconButton(Icons.Copy, "复制到剪贴板", () => _actions.Copy(), shortcut: "Ctrl+C"));
-            buttons.Children.Add(UiFactory.IconButton(Icons.Save, "保存图片", () => _actions.Save(), shortcut: "Ctrl+S"));
+            if (vis.ShowCopy) buttons.Children.Add(UiFactory.IconButton(Icons.Copy, "复制到剪贴板", () => _actions.Copy(), shortcut: "Ctrl+C"));
+            if (vis.ShowSave) buttons.Children.Add(UiFactory.IconButton(Icons.Save, "保存图片", () => _actions.Save(), shortcut: "Ctrl+S"));
+            if (vis.ShowLongshot)
+            {
+                var longshotBtn = new Button
+                {
+                    Style = ThemeLoader.Find<Style>("Pp.ToolButton"),
+                    Content = BuildLongshotVector(),
+                    ToolTip = UiFactory.BuildTooltip("滚动长截图", "Ctrl+L"),
+                };
+                longshotBtn.Click += (_, _) => _actions.Longshot();
+                buttons.Children.Add(longshotBtn);
+            }
 
-            if (Features.Pin)
+            if (Features.Pin && vis.ShowPin)
             {
                 buttons.Children.Add(UiFactory.IconButton(Icons.Pin, "贴到屏幕", () => _actions.Pin(), shortcut: "Ctrl+T"));
             }
 
-            if (Features.Ocr)
+            if (Features.Ocr && vis.ShowOcr)
             {
                 buttons.Children.Add(UiFactory.IconButton(Icons.Document, "提取文字", () => _actions.Ocr(), shortcut: "Ctrl+O"));
             }
 
-            if (Features.Translate)
+            if (Features.Translate && vis.ShowTranslate)
             {
                 buttons.Children.Add(UiFactory.IconButton(Icons.Globe, "翻译截图", () => _actions.Translate(), shortcut: "Ctrl+Shift+T"));
             }
 
-            buttons.Children.Add(UiFactory.Separator());
+            AddSeparatorIfNeeded(buttons);
         }
 
         buttons.Children.Add(UiFactory.IconButton(Icons.Close, "取消", () => _actions.Cancel(), shortcut: "Esc"));
@@ -309,6 +329,49 @@ internal sealed class CaptureToolbar : Window
             grid.Children.Add(rect);
         }
     }
+
+    private static void AddSeparatorIfNeeded(StackPanel panel)
+    {
+        if (panel.Children.Count == 0 || panel.Children[^1] is Border) return;
+        panel.Children.Add(UiFactory.Separator());
+    }
+
+    private static UIElement BuildSpotlightVector()
+    {
+        var grid = new Grid { Width = 14, Height = 14 };
+        grid.Children.Add(new Rectangle
+        {
+            Width = 14,
+            Height = 14,
+            RadiusX = 2.5,
+            RadiusY = 2.5,
+            Stroke = ThemeLoader.Brush("Pp.TextSecondary"),
+            StrokeThickness = 1.2,
+            Fill = Brushes.Transparent,
+        });
+        grid.Children.Add(new Ellipse
+        {
+            Width = 6.5,
+            Height = 6.5,
+            Fill = ThemeLoader.Brush("Pp.TextPrimary"),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+        });
+        return grid;
+    }
+
+    private static UIElement BuildLongshotVector() => new Path
+    {
+        Width = 14,
+        Height = 15,
+        Stretch = Stretch.Uniform,
+        Stroke = ThemeLoader.Brush("Pp.TextPrimary"),
+        StrokeThickness = 1.45,
+        StrokeStartLineCap = PenLineCap.Round,
+        StrokeEndLineCap = PenLineCap.Round,
+        StrokeLineJoin = PenLineJoin.Round,
+        Data = Geometry.Parse("M2,1.5 L12,1.5 M2,13.5 L12,13.5 M7,3.5 L7,11.5 M4.5,9 L7,11.5 L9.5,9"),
+    };
 }
 
 /// <summary>工具栏按钮回调。</summary>
@@ -323,6 +386,8 @@ internal interface ICaptureToolbarActions
     void Copy();
 
     void Save();
+
+    void Longshot();
 
     void Pin();
 

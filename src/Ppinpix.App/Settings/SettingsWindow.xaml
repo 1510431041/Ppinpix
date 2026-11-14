@@ -365,6 +365,37 @@
                                 <TextBox x:Name="FileNameTplBox" TextChanged="OnCaptureChanged" />
                             </StackPanel>
                         </Border>
+
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <DockPanel Margin="0,0,0,4">
+                                    <Button DockPanel.Dock="Right" Content="全部显示" Padding="10,4" Click="OnShowAllToolbarButtonsClick" />
+                                    <TextBlock Text="截图工具栏按钮显示" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </DockPanel>
+                                <TextBlock Text="取消勾选可精简截图工具栏图标；隐藏后的功能仍可通过对应快捷键触发。" Style="{StaticResource MutedLabel}" Margin="0,0,0,10" />
+                                <UniformGrid Columns="4">
+                                    <CheckBox x:Name="TbShowSelectCheck" Content="选择" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowRectangleCheck" Content="矩形" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowEllipseCheck" Content="椭圆" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowArrowCheck" Content="箭头" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowLineCheck" Content="直线" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowFreehandCheck" Content="画笔" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowNumberBadgeCheck" Content="序号" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowTextCheck" Content="文字" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowMosaicCheck" Content="马赛克" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowSpotlightCheck" Content="聚光灯" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowHighlightCheck" Content="高亮" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowEraserCheck" Content="橡皮" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowUndoRedoCheck" Content="撤销/重做" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowLongshotCheck" Content="长截图" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowCopyCheck" Content="复制" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowSaveCheck" Content="保存" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowPinCheck" Content="钉图" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowOcrCheck" Content="文字识别" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                    <CheckBox x:Name="TbShowTranslateCheck" Content="翻译" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                                </UniformGrid>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </ScrollViewer>
 

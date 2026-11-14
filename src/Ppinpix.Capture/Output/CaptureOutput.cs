@@ -13,7 +13,7 @@ namespace Ppinpix.Capture.Output;
 /// <summary>截图结果输出：复制到剪贴板、保存为文件、格式编解码。</summary>
 public static class CaptureOutput
 {
-    private const int ClipboardRetryCount = 5;
+    private const int ClipboardRetryCount = 2;
     private const int ClipboardRetryDelayMs = 40;
 
     /// <summary>把帧转成可跨线程使用的 WPF 位图。调用方得到的对象是冻结的。</summary>
@@ -77,17 +77,17 @@ public static class CaptureOutput
     }
 
     /// <summary>
-    /// 复制到剪贴板。同时放入 CF_BITMAP/CF_DIB（WPF 默认）与 PNG 流，
-    /// 这样粘贴到 Office、画图、浏览器、聊天工具里都能拿到合适的格式。
+    /// 构造用于剪贴板的 <see cref="DataObject"/>，同时放入 WPF 位图与原始 PNG 字节流。
+    /// 调用方负责在剪贴板提交结束后释放 <paramref name="pngStream"/>。
     /// </summary>
-    public static bool CopyToClipboard(ScreenFrame frame)
+    public static DataObject CreateClipboardDataObject(ScreenFrame frame, out MemoryStream? pngStream)
     {
         var bitmap = ToBitmapSource(frame);
 
         var data = new DataObject();
         data.SetImage(bitmap);
 
-        MemoryStream? pngStream = null;
+        pngStream = null;
         try
         {
             pngStream = new MemoryStream();
@@ -105,6 +105,17 @@ public static class CaptureOutput
             pngStream?.Dispose();
             pngStream = null;
         }
+
+        return data;
+    }
+
+    /// <summary>
+    /// 复制到剪贴板。同时放入 CF_BITMAP/CF_DIB（WPF 默认）与 PNG 流，
+    /// 这样粘贴到 Office、画图、浏览器、聊天工具里都能拿到合适的格式。
+    /// </summary>
+    public static bool CopyToClipboard(ScreenFrame frame)
+    {
+        var data = CreateClipboardDataObject(frame, out var pngStream);
 
         try
         {

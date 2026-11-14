@@ -1,9 +1,11 @@
 ﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Ppinpix.Capture.Annotation;
 using Ppinpix.Capture.Annotation.Shapes;
 using Ppinpix.Capture.Interop;
+using Ppinpix.Capture.Longshot;
 using Ppinpix.Capture.Output;
 using Ppinpix.Capture.Overlay;
 using Ppinpix.Capture.Windowing;
@@ -73,6 +75,8 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
     private MagnifierWindow? _magnifier;
     private CaptureToolbar? _toolbar;
     private ToolPropertiesBar? _propertiesBar;
+    private LongshotControlWindow? _longshotWindow;
+    private bool _longshotActive;
 
     private bool _annotationDragging;
 
@@ -183,7 +187,7 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
             };
         }
 
-        _toolbar = new CaptureToolbar(this);
+        _toolbar = new CaptureToolbar(this, annotationOnly: false, _settings.Capture.Toolbar);
         if (Features.Annotate)
         {
             _propertiesBar = new ToolPropertiesBar(_annotations);
@@ -495,10 +499,16 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
 
     public void OnKeyDown(Key key, ModifierKeys modifiers)
     {
-        if (_finished) return;
+        if (_finished || _longshotActive) return;
 
         bool ctrl = (modifiers & ModifierKeys.Control) != 0;
         bool shift = (modifiers & ModifierKeys.Shift) != 0;
+
+        if (key == Key.F1 && shift && !ctrl)
+        {
+            ReCapture();
+            return;
+        }
 
         if (Features.Annotate && _state.HasSelection)
         {
@@ -569,6 +579,10 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
                 Ocr();
                 return;
 
+            case Key.L when ctrl && _state.HasSelection:
+                Longshot();
+                return;
+
             case Key.A when ctrl:
                 _state.Rect = _virtualBounds;
                 _state.ClearHighlight();
@@ -610,6 +624,7 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
                             : _annotations.LastMaskTool);
                     SyncAll();
                     return;
+                case Key.K: SelectTool(AnnotationTool.Spotlight); return;
                 case Key.H: SelectTool(AnnotationTool.Highlight); return;
                 case Key.E: SelectTool(AnnotationTool.Eraser); return;
                 case >= Key.D1 and <= Key.D8:
@@ -927,6 +942,123 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
         }
     }
 
+    public void Longshot()
+    {
+        if (_finished || _longshotActive || !_state.HasSelection) return;
+
+        CommitAllTextEdits();
+        var region = _state.Rect;
+        var initialCrop = _frame.Crop(region);
+        if (initialCrop.Bounds.IsEmpty) return;
+
+        _longshotActive = true;
+        _escapeHotkey.UnregisterAll();
+
+        HideToolbar();
+        _magnifier?.SetVisible(false);
+        foreach (var overlay in _overlays)
+        {
+            overlay.Hide();
+        }
+
+        if (_previousForeground != 0 && WindowApi.IsWindow(_previousForeground))
+        {
+            WindowApi.SetForegroundWindow(_previousForeground);
+        }
+
+        _longshotWindow = new LongshotControlWindow(
+            region,
+            initialCrop,
+            _displays,
+            OnLongshotCompleted);
+        _longshotWindow.Start();
+    }
+
+    private void OnLongshotCompleted(CaptureAction action, ScreenFrame? stitchedFrame)
+    {
+        _longshotWindow = null;
+        _longshotActive = false;
+
+        if (_finished) return;
+
+        if (action == CaptureAction.Cancel || stitchedFrame is null)
+        {
+            FinishWithRendered(CaptureAction.Cancel, null, PxRect.Empty);
+            return;
+        }
+
+        var bounds = stitchedFrame.Bounds;
+        if (action == CaptureAction.Copy)
+        {
+            if (CaptureOutput.CopyToClipboard(stitchedFrame))
+            {
+                ToastWindow.Show($"已复制长截图 {bounds.Width} × {bounds.Height} 到剪贴板", ToastKind.Success, _displays);
+            }
+            else
+            {
+                ToastWindow.Show("复制失败：剪贴板被其他程序占用。", ToastKind.Error, _displays);
+            }
+            FinishWithRendered(CaptureAction.Copy, stitchedFrame, bounds);
+            return;
+        }
+
+        if (action == CaptureAction.Save)
+        {
+            try
+            {
+                string path = CaptureOutput.Save(stitchedFrame, _settings.Save);
+                ToastWindow.Show($"已保存长截图到 {path}", ToastKind.Success, _displays);
+                if (_settings.Save.CopyAfterSave) CaptureOutput.CopyToClipboard(stitchedFrame);
+                FinishWithRendered(CaptureAction.Save, stitchedFrame, bounds);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("保存长截图失败。", ex);
+                ToastWindow.Show($"保存失败：{ex.Message}", ToastKind.Error, _displays);
+                FinishWithRendered(CaptureAction.Cancel, null, PxRect.Empty);
+            }
+            return;
+        }
+
+        FinishWithRendered(action, stitchedFrame, bounds);
+    }
+
+    private void ReCapture()
+    {
+        if (_finished || _longshotActive) return;
+
+        CommitAllTextEdits();
+        _magnifier?.SetVisible(false);
+
+        var dispatcher = _overlays.FirstOrDefault()?.Dispatcher ?? Dispatcher.CurrentDispatcher;
+        dispatcher.BeginInvoke(DispatcherPriority.Render, () =>
+        {
+            if (_finished || _longshotActive) return;
+
+            var newFrame = new GdiScreenCapture().Capture(_virtualBounds);
+            if (_settings.Capture.IncludeCursor)
+            {
+                CursorCompositor.Composite(newFrame);
+            }
+
+            _frame = newFrame;
+            _annotations.Clear();
+            _pendingClickHighlight = PxRect.Empty;
+            _state.Clear();
+            HideToolbar();
+
+            foreach (var overlay in _overlays)
+            {
+                overlay.UpdateFrozenFrame(_frame);
+            }
+
+            UpdateHoverHighlight();
+            SyncAll();
+            UpdateMagnifier();
+            ToastWindow.Show("已将当前画面定格为新底图，可重新框选或嵌套标注", ToastKind.Info, _displays);
+        });
+    }
+
     public void Pin()
     {
         if (!_state.HasSelection) return;
@@ -1016,6 +1148,9 @@ public sealed class CaptureSession : IOverlayInput, ICaptureToolbarActions, IDis
 
         _magnifier?.Close();
         _magnifier = null;
+
+        _longshotWindow?.Close();
+        _longshotWindow = null;
 
         _propertiesBar?.Close();
         _propertiesBar = null;

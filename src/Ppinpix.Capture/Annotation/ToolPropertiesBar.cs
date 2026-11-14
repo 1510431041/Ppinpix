@@ -135,8 +135,8 @@ internal sealed class ToolPropertiesBar : Window
 
         var style = EffectiveStyle();
 
-        // 马赛克 / 模糊没有颜色选择
-        if (tool is not (AnnotationTool.Mosaic or AnnotationTool.Blur))
+        // 马赛克 / 模糊 / 聚光灯没有颜色选择
+        if (tool is not (AnnotationTool.Mosaic or AnnotationTool.Blur or AnnotationTool.Spotlight))
         {
             BuildColorSwatches(style.Argb);
             _panel.Children.Add(UiFactory.Separator());
@@ -145,6 +145,14 @@ internal sealed class ToolPropertiesBar : Window
         switch (tool)
         {
             case AnnotationTool.Rectangle:
+                BuildLineWidthPills(style.LineWidth);
+                _panel.Children.Add(UiFactory.Separator());
+                _panel.Children.Add(TogglePill("填充", style.Filled, v => _editor.UpdateStyle(s => s with { Filled = v })));
+                _panel.Children.Add(TogglePill("虚线", style.Dashed, v => _editor.UpdateStyle(s => s with { Dashed = v })));
+                _panel.Children.Add(UiFactory.Separator());
+                BuildCornerRadiusPills(style.CornerRadius);
+                break;
+
             case AnnotationTool.Ellipse:
                 BuildLineWidthPills(style.LineWidth);
                 _panel.Children.Add(UiFactory.Separator());
@@ -200,9 +208,21 @@ internal sealed class ToolPropertiesBar : Window
                         v => v == style.BlurRadius,
                         v => _editor.UpdateStyle(s => s with { BlurRadius = v }));
                 }
+                _panel.Children.Add(UiFactory.Separator());
+                BuildCornerRadiusPills(style.CornerRadius);
+                break;
+
+            case AnnotationTool.Spotlight:
+                BuildCornerRadiusPills(style.CornerRadius);
                 break;
         }
     }
+
+    private void BuildCornerRadiusPills(double currentRadius) =>
+        BuildOptionPills(
+            [("直角", 0d), ("圆角", 10d), ("大圆角", 22d)],
+            v => Math.Abs(v - currentRadius) < 1.5,
+            v => _editor.UpdateStyle(s => s with { CornerRadius = v }));
 
     private void BuildColorSwatches(uint currentArgb)
     {

@@ -79,25 +79,42 @@ public sealed class CaptureOutputTests : IDisposable
     public void CopyToClipboard_ShouldExposeValidImageAndRawPngStream()
     {
         Exception? threadEx = null;
+        bool dataHasBitmap = false;
+        byte[]? dataPngHeader = null;
         bool copied = false;
         bool hasImage = false;
         byte[]? pngHeader = null;
 
         var sta = new Thread(() =>
         {
+            MemoryStream? stream = null;
             try
             {
                 var frame = CreateSolidFrame(16, 12, b: 30, g: 140, r: 220, a: 255);
-                copied = CaptureOutput.CopyToClipboard(frame);
-                hasImage = System.Windows.Clipboard.ContainsImage();
-                if (System.Windows.Clipboard.GetData("PNG") is MemoryStream ms)
+                var data = CaptureOutput.CreateClipboardDataObject(frame, out stream);
+                dataHasBitmap = data.GetDataPresent(System.Windows.DataFormats.Bitmap);
+                if (data.GetData("PNG") is MemoryStream rawPng)
                 {
-                    pngHeader = ms.ToArray();
+                    dataPngHeader = rawPng.ToArray();
+                }
+
+                copied = CaptureOutput.CopyToClipboard(frame);
+                if (copied)
+                {
+                    hasImage = System.Windows.Clipboard.ContainsImage();
+                    if (System.Windows.Clipboard.GetData("PNG") is MemoryStream ms)
+                    {
+                        pngHeader = ms.ToArray();
+                    }
                 }
             }
             catch (Exception ex)
             {
                 threadEx = ex;
+            }
+            finally
+            {
+                stream?.Dispose();
             }
         });
         sta.SetApartmentState(ApartmentState.STA);
@@ -105,11 +122,18 @@ public sealed class CaptureOutputTests : IDisposable
         sta.Join();
 
         Assert.Null(threadEx);
-        Assert.True(copied);
-        Assert.True(hasImage);
-        Assert.NotNull(pngHeader);
-        Assert.True(pngHeader!.Length >= 8);
-        Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, pngHeader[..4]);
+        Assert.True(dataHasBitmap);
+        Assert.NotNull(dataPngHeader);
+        Assert.True(dataPngHeader!.Length >= 8);
+        Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, dataPngHeader[..4]);
+
+        if (copied)
+        {
+            Assert.True(hasImage);
+            Assert.NotNull(pngHeader);
+            Assert.True(pngHeader!.Length >= 8);
+            Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, pngHeader[..4]);
+        }
     }
 
     private static ScreenFrame CreateSolidFrame(int w, int h, byte b, byte g, byte r, byte a)

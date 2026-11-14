@@ -36,6 +36,8 @@ public sealed class RectangleShape : IShape
 
     public RectF Bounds => Rect;
 
+    public double ClampedCornerRadius => GeometryHelper.ClampCornerRadius(Rect, Style.CornerRadius);
+
     public bool IsValid => Rect.Width >= 3 && Rect.Height >= 3;
 
     public void UpdateDrag(double x, double y, bool constrain = false)
@@ -60,10 +62,16 @@ public sealed class RectangleShape : IShape
             || GeometryHelper.DistancePointToSegment(x, y, Rect.Left, Rect.Bottom, Rect.Left, Rect.Top) <= hit;
     }
 
-    public IReadOnlyList<ShapeHandle> GetHandles() => GeometryHelper.GetBoxHandles(Rect);
+    public IReadOnlyList<ShapeHandle> GetHandles() =>
+        GeometryHelper.GetBoxHandlesWithCornerRadius(Rect, Style.CornerRadius);
 
     public void MoveHandle(ShapeHandleKind kind, double x, double y, bool constrain = false)
     {
+        if (kind == ShapeHandleKind.CornerRadius)
+        {
+            Style = Style with { CornerRadius = GeometryHelper.ComputeCornerRadiusFromHandle(Rect, x) };
+            return;
+        }
         Rect = GeometryHelper.MoveBoxHandle(Rect, kind, x, y, constrain);
         _anchorX = Rect.Left;
         _anchorY = Rect.Top;
@@ -83,12 +91,20 @@ public sealed class RectangleShape : IShape
     {
         if (!IsValid) return;
         using var paint = GeometryHelper.CreateStrokePaint(Style);
-        if (!Style.Filled) paint.StrokeJoin = SKStrokeJoin.Miter;
         var skRect = SKRect.Create(
             (float)(Rect.X - originX),
             (float)(Rect.Y - originY),
             (float)Rect.Width,
             (float)Rect.Height);
-        canvas.DrawRect(skRect, paint);
+        float radius = (float)ClampedCornerRadius;
+        if (radius > 0.5f)
+        {
+            canvas.DrawRoundRect(skRect, radius, radius, paint);
+        }
+        else
+        {
+            if (!Style.Filled) paint.StrokeJoin = SKStrokeJoin.Miter;
+            canvas.DrawRect(skRect, paint);
+        }
     }
 }

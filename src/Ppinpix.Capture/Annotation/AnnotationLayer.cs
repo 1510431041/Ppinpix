@@ -218,24 +218,45 @@ public sealed class AnnotationLayer : Canvas
         base.OnRender(dc);
 
         bool hasClip = !_clipRectPx.IsEmpty;
+        Rect clipDip = hasClip
+            ? ToDipRect(_clipRectPx.Left, _clipRectPx.Top, _clipRectPx.Width, _clipRectPx.Height)
+            : new Rect(0, 0,
+                ActualWidth > 0 ? ActualWidth : _sourceFrame.Width / _scale,
+                ActualHeight > 0 ? ActualHeight : _sourceFrame.Height / _scale);
+
         if (hasClip)
         {
-            var clipDip = ToDipRect(
-                _clipRectPx.Left, _clipRectPx.Top,
-                _clipRectPx.Width, _clipRectPx.Height);
             dc.PushClip(new RectangleGeometry(clipDip));
         }
 
         using var renderCtx = new AnnotationRenderContext(_sourceFrame);
 
-        foreach (var shape in _editor.Shapes)
+        IEnumerable<IShape> allVisible = _editor.DraftShape is { } draft
+            ? _editor.Shapes.Append(draft)
+            : _editor.Shapes;
+        var visibleList = allVisible.ToList();
+
+        // 1. 马赛克与模糊底层
+        foreach (var shape in visibleList)
         {
-            DrawShape(dc, shape, renderCtx);
+            if (shape is MosaicShape or BlurShape)
+            {
+                DrawShape(dc, shape, renderCtx);
+            }
         }
 
-        if (_editor.DraftShape is { } draft)
+        // 2. 聚光灯暗色遮罩（合并所有有效聚光灯为并集，保留聚光区域原始亮度）
+        var spotlights = visibleList.OfType<SpotlightShape>().Where(s => s.IsValid).ToList();
+        if (spotlights.Count > 0)
         {
-            DrawShape(dc, draft, renderCtx);
+            DrawSpotlightMask(dc, clipDip, spotlights);
+        }
+
+        // 3. 其余矢量标注与文字
+        foreach (var shape in visibleList)
+        {
+            if (shape is MosaicShape or BlurShape or SpotlightShape) continue;
+            DrawShape(dc, shape, renderCtx);
         }
 
         if (hasClip)
@@ -282,16 +303,45 @@ public sealed class AnnotationLayer : Canvas
                 break;
             case MosaicShape mosaic when mosaic.IsValid:
                 var mPatch = mosaic.GetOrBuildPatch(_sourceFrame, out var mRegion);
-                if (mPatch is not null) DrawPatch(dc, mosaic.Id, mPatch, mRegion);
+                if (mPatch is not null) DrawPatch(dc, mosaic.Id, mPatch, mRegion, mosaic.Rect, mosaic.Style.CornerRadius);
                 break;
             case BlurShape blur when blur.IsValid:
                 var bPatch = blur.GetOrBuildPatch(renderCtx, out var bRegion);
-                if (bPatch is not null) DrawPatch(dc, blur.Id, bPatch, bRegion);
+                if (bPatch is not null) DrawPatch(dc, blur.Id, bPatch, bRegion, blur.Rect, blur.Style.CornerRadius);
                 break;
         }
     }
 
-    private void DrawPatch(DrawingContext dc, Guid id, SKBitmap patch, PxRect region)
+    private void DrawSpotlightMask(DrawingContext dc, Rect fullDip, IReadOnlyList<SpotlightShape> spotlights)
+    {
+        Geometry? union = null;
+        foreach (var spot in spotlights)
+        {
+            var dip = ToDipRect(spot.Rect.X, spot.Rect.Y, spot.Rect.Width, spot.Rect.Height);
+            double rDip = spot.ClampedCornerRadius / _scale;
+            var geom = rDip > 0.3
+                ? new RectangleGeometry(dip, rDip, rDip)
+                : new RectangleGeometry(dip);
+            union = union is null ? geom : Geometry.Combine(union, geom, GeometryCombineMode.Union, null);
+        }
+
+        if (union is null) return;
+
+        var masked = Geometry.Combine(new RectangleGeometry(fullDip), union, GeometryCombineMode.Exclude, null);
+        masked.Freeze();
+        var dimBrush = new SolidColorBrush(Color.FromArgb(SpotlightShape.MaskAlpha, 0, 0, 0));
+        dimBrush.Freeze();
+        dc.DrawGeometry(dimBrush, null, masked);
+
+        var rimBrush = new SolidColorBrush(Color.FromArgb(90, 255, 255, 255));
+        rimBrush.Freeze();
+        var rimPen = new Pen(rimBrush, Math.Max(1.0, 1.25 / _scale));
+        rimPen.Freeze();
+        union.Freeze();
+        dc.DrawGeometry(null, rimPen, union);
+    }
+
+    private void DrawPatch(DrawingContext dc, Guid id, SKBitmap patch, PxRect region, RectF shapeRect, double cornerRadiusPx)
     {
         nint ptr = patch.GetPixels();
         BitmapSource bmp;
@@ -316,22 +366,41 @@ public sealed class AnnotationLayer : Canvas
             _patchCache[id] = (ptr, bmp);
         }
 
-        dc.DrawImage(bmp, ToDipRect(region.Left, region.Top, region.Width, region.Height));
+        double rDip = GeometryHelper.ClampCornerRadius(shapeRect, cornerRadiusPx) / _scale;
+        if (rDip > 0.3)
+        {
+            var clipDip = ToDipRect(shapeRect.X, shapeRect.Y, shapeRect.Width, shapeRect.Height);
+            dc.PushClip(new RectangleGeometry(clipDip, rDip, rDip));
+            dc.DrawImage(bmp, ToDipRect(region.Left, region.Top, region.Width, region.Height));
+            dc.Pop();
+        }
+        else
+        {
+            dc.DrawImage(bmp, ToDipRect(region.Left, region.Top, region.Width, region.Height));
+        }
     }
 
     private void DrawRectangle(DrawingContext dc, RectangleShape r)
     {
         var dip = ToDipRect(r.Rect.X, r.Rect.Y, r.Rect.Width, r.Rect.Height);
+        double rDip = r.ClampedCornerRadius / _scale;
         var color = ToColor(r.Style.Argb);
         if (r.Style.Filled)
         {
             var brush = new SolidColorBrush(color);
             brush.Freeze();
-            dc.DrawRectangle(brush, null, dip);
+            if (rDip > 0.3)
+                dc.DrawRoundedRectangle(brush, null, dip, rDip, rDip);
+            else
+                dc.DrawRectangle(brush, null, dip);
         }
         else
         {
-            dc.DrawRectangle(null, MakePen(r.Style, miterJoin: true), dip);
+            var pen = MakePen(r.Style, miterJoin: rDip <= 0.3);
+            if (rDip > 0.3)
+                dc.DrawRoundedRectangle(null, pen, dip, rDip, rDip);
+            else
+                dc.DrawRectangle(null, pen, dip);
         }
     }
 
@@ -362,9 +431,27 @@ public sealed class AnnotationLayer : Canvas
 
     private void DrawArrow(DrawingContext dc, ArrowShape a)
     {
-        var g = GeometryHelper.ComputeArrowGeometry(a.X1, a.Y1, a.X2, a.Y2, a.Style.LineWidth);
+        var g = a.ComputeHeadGeometry();
         var pen = MakePen(a.Style with { Filled = false, Dashed = false });
-        dc.DrawLine(pen, ToDipPoint(a.X1, a.Y1), ToDipPoint(g.ShaftEnd.X, g.ShaftEnd.Y));
+        if (a.IsCurved)
+        {
+            var shaftGeom = new StreamGeometry();
+            using (var ctx = shaftGeom.Open())
+            {
+                ctx.BeginFigure(ToDipPoint(a.X1, a.Y1), isFilled: false, isClosed: false);
+                ctx.QuadraticBezierTo(
+                    ToDipPoint(a.ControlX, a.ControlY),
+                    ToDipPoint(g.ShaftEnd.X, g.ShaftEnd.Y),
+                    isStroked: true,
+                    isSmoothJoin: true);
+            }
+            shaftGeom.Freeze();
+            dc.DrawGeometry(null, pen, shaftGeom);
+        }
+        else
+        {
+            dc.DrawLine(pen, ToDipPoint(a.X1, a.Y1), ToDipPoint(g.ShaftEnd.X, g.ShaftEnd.Y));
+        }
 
         var geom = new StreamGeometry();
         using (var ctx = geom.Open())
@@ -452,10 +539,30 @@ public sealed class AnnotationLayer : Canvas
             : Color.FromArgb(112, 255, 255, 255);
         var ringBrush = new SolidColorBrush(ringColor);
         ringBrush.Freeze();
-        var ringPen = new Pen(ringBrush, Math.Max(1.0, 1.25 / _scale));
+        var ringPen = new Pen(ringBrush, Math.Max(1.0, 1.25 / _scale))
+        {
+            LineJoin = PenLineJoin.Round,
+        };
         ringPen.Freeze();
 
-        dc.DrawEllipse(fill, ringPen, center, rDip, rDip);
+        if (b.TryGetTailTriangle(out var bl, out var tip, out var br))
+        {
+            var circleGeom = new EllipseGeometry(center, rDip, rDip);
+            var tailGeom = new StreamGeometry();
+            using (var ctx = tailGeom.Open())
+            {
+                ctx.BeginFigure(ToDipPoint(bl.X, bl.Y), isFilled: true, isClosed: true);
+                ctx.LineTo(ToDipPoint(tip.X, tip.Y), isStroked: true, isSmoothJoin: true);
+                ctx.LineTo(ToDipPoint(br.X, br.Y), isStroked: true, isSmoothJoin: true);
+            }
+            var unionGeom = Geometry.Combine(circleGeom, tailGeom, GeometryCombineMode.Union, null);
+            unionGeom.Freeze();
+            dc.DrawGeometry(fill, ringPen, unionGeom);
+        }
+        else
+        {
+            dc.DrawEllipse(fill, ringPen, center, rDip, rDip);
+        }
 
         string label = b.Number.ToString(CultureInfo.InvariantCulture);
         double fontSizeDip = rDip * (label.Length >= 2 ? 0.96 : 1.15);
@@ -541,10 +648,20 @@ public sealed class AnnotationLayer : Canvas
         var fill = Brushes.White;
         var stroke = new Pen(new SolidColorBrush(Tokens.Accent), 1.5);
         stroke.Freeze();
+        var specialFill = new SolidColorBrush(Tokens.Accent);
+        specialFill.Freeze();
+        var specialStroke = new Pen(Brushes.White, 1.5);
+        specialStroke.Freeze();
         const double r = 4.0;
         foreach (var h in selected.GetHandles())
         {
-            dc.DrawEllipse(fill, stroke, ToDipPoint(h.X, h.Y), r, r);
+            bool isSpecial = h.Kind is ShapeHandleKind.CurveControl or ShapeHandleKind.TailEnd or ShapeHandleKind.CornerRadius;
+            dc.DrawEllipse(
+                isSpecial ? specialFill : fill,
+                isSpecial ? specialStroke : stroke,
+                ToDipPoint(h.X, h.Y),
+                isSpecial ? 4.3 : r,
+                isSpecial ? 4.3 : r);
         }
     }
 

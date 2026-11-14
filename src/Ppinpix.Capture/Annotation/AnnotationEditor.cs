@@ -170,6 +170,11 @@ public sealed class AnnotationEditor : IDisposable
                 var handle = HitTestHandle(current, x, y, handleHitRadiusPx);
                 if (handle != ShapeHandleKind.None)
                 {
+                    if (clickCount >= 2 && handle == ShapeHandleKind.CurveControl && current is ArrowShape curved && curved.IsCurved)
+                    {
+                        ResetArrowCurve(curved);
+                        return false;
+                    }
                     _activeHandle = handle;
                     _resizeOriginSnapshot = current.Clone(newId: false);
                     _dragAction = DragAction.ResizeHandle;
@@ -187,6 +192,11 @@ public sealed class AnnotationEditor : IDisposable
                     StateChanged?.Invoke();
                     TextEditRequested?.Invoke(new TextEditRequest(textShape, IsNew: false));
                     return true;
+                }
+                if (hit is ArrowShape arrowShape && arrowShape.IsCurved && clickCount >= 2)
+                {
+                    ResetArrowCurve(arrowShape);
+                    return false;
                 }
 
                 _dragLastX = x;
@@ -228,6 +238,11 @@ public sealed class AnnotationEditor : IDisposable
             var h = HitTestHandle(selectedForHandle, x, y, handleHitRadiusPx);
             if (h != ShapeHandleKind.None)
             {
+                if (clickCount >= 2 && h == ShapeHandleKind.CurveControl && selectedForHandle is ArrowShape curved && curved.IsCurved)
+                {
+                    ResetArrowCurve(curved);
+                    return false;
+                }
                 _activeHandle = h;
                 _resizeOriginSnapshot = selectedForHandle.Clone(newId: false);
                 _dragAction = DragAction.ResizeHandle;
@@ -486,8 +501,25 @@ public sealed class AnnotationEditor : IDisposable
         canvas.DrawBitmap(baseBmp, 0, 0);
 
         using var renderCtx = new AnnotationRenderContext(source);
+
+        // 先绘制马赛克/模糊（底层打码），再统一绘制聚光灯遮罩（暗化非聚光区域），最后绘制其余矢量标注与文字
         foreach (var shape in _shapes)
         {
+            if (shape is MosaicShape or BlurShape)
+            {
+                shape.Render(canvas, renderCtx, clamped.X, clamped.Y);
+            }
+        }
+
+        var spotlights = _shapes.OfType<SpotlightShape>().Where(s => s.IsValid).ToList();
+        if (spotlights.Count > 0)
+        {
+            SpotlightShape.RenderSpotlightMask(canvas, clamped.Width, clamped.Height, spotlights, clamped.X, clamped.Y);
+        }
+
+        foreach (var shape in _shapes)
+        {
+            if (shape is MosaicShape or BlurShape or SpotlightShape) continue;
             shape.Render(canvas, renderCtx, clamped.X, clamped.Y);
         }
         canvas.Flush();
@@ -516,8 +548,34 @@ public sealed class AnnotationEditor : IDisposable
         AnnotationTool.NumberBadge => new NumberBadgeShape(x, y, NextBadgeNumber, CurrentStyle),
         AnnotationTool.Mosaic => new MosaicShape(x, y, CurrentStyle),
         AnnotationTool.Blur => new BlurShape(x, y, CurrentStyle),
+        AnnotationTool.Spotlight => new SpotlightShape(x, y, CurrentStyle),
         _ => null,
     };
+
+    public void Clear()
+    {
+        CancelDraft();
+        foreach (var shape in _shapes)
+        {
+            (shape as IDisposable)?.Dispose();
+        }
+        _shapes.Clear();
+        _selectedShapeId = null;
+        ActiveTool = AnnotationTool.None;
+        _commands.Clear();
+        StateChanged?.Invoke();
+    }
+
+    private void ResetArrowCurve(ArrowShape arrow)
+    {
+        var before = arrow.Clone(newId: false);
+        arrow.ResetCurve();
+        var after = arrow.Clone(newId: false);
+        ReplaceShapeInstance(before.Clone(newId: false));
+        _commands.Execute(new ResizeShapeCommand(before, after), _shapes);
+        _dragAction = DragAction.None;
+        StateChanged?.Invoke();
+    }
 
     private void TryEraseAt(double x, double y, double tolerancePx)
     {

@@ -104,6 +104,58 @@ public sealed class CaptureSettings
 
     /// <summary>点击工具栏复制按钮或 Ctrl+C 后是否自动关闭覆盖层。</summary>
     public bool CloseOnCopy { get; set; }
+
+    /// <summary>截图工具栏各按钮显示配置（隐藏按钮仅隐藏图标，不禁用对应快捷键）。</summary>
+    public ToolbarVisibilitySettings Toolbar { get; set; } = new();
+}
+
+/// <summary>截图工具栏按钮可见性配置。</summary>
+public sealed class ToolbarVisibilitySettings
+{
+    public bool ShowSelect { get; set; } = true;
+    public bool ShowRectangle { get; set; } = true;
+    public bool ShowEllipse { get; set; } = true;
+    public bool ShowArrow { get; set; } = true;
+    public bool ShowLine { get; set; } = true;
+    public bool ShowFreehand { get; set; } = true;
+    public bool ShowNumberBadge { get; set; } = true;
+    public bool ShowText { get; set; } = true;
+    public bool ShowMosaic { get; set; } = true;
+    public bool ShowSpotlight { get; set; } = true;
+    public bool ShowHighlight { get; set; } = true;
+    public bool ShowEraser { get; set; } = true;
+    public bool ShowUndoRedo { get; set; } = true;
+    public bool ShowLongshot { get; set; } = true;
+    public bool ShowCopy { get; set; } = true;
+    public bool ShowSave { get; set; } = true;
+    public bool ShowPin { get; set; } = true;
+    public bool ShowOcr { get; set; } = true;
+    public bool ShowTranslate { get; set; } = true;
+
+    public ToolbarVisibilitySettings Clone() => (ToolbarVisibilitySettings)MemberwiseClone();
+
+    public void ShowAll()
+    {
+        ShowSelect = true;
+        ShowRectangle = true;
+        ShowEllipse = true;
+        ShowArrow = true;
+        ShowLine = true;
+        ShowFreehand = true;
+        ShowNumberBadge = true;
+        ShowText = true;
+        ShowMosaic = true;
+        ShowSpotlight = true;
+        ShowHighlight = true;
+        ShowEraser = true;
+        ShowUndoRedo = true;
+        ShowLongshot = true;
+        ShowCopy = true;
+        ShowSave = true;
+        ShowPin = true;
+        ShowOcr = true;
+        ShowTranslate = true;
+    }
 }
 
 public sealed class AnnotationSettings
@@ -425,6 +477,7 @@ public sealed class SettingsStore
         s.Capture.SnapThresholdDip = Math.Clamp(s.Capture.SnapThresholdDip, 0, 40);
         s.Capture.DelayMs = Math.Clamp(s.Capture.DelayMs, 0, 10_000);
         s.Capture.MagnifierZoom = Math.Clamp(s.Capture.MagnifierZoom, 2, 16);
+        s.Capture.Toolbar ??= new ToolbarVisibilitySettings();
 
         s.Pin.DefaultOpacity = Math.Clamp(s.Pin.DefaultOpacity, 0.1, 1.0);
         s.Pin.MaxPinCount = Math.Clamp(s.Pin.MaxPinCount, 1, 200);

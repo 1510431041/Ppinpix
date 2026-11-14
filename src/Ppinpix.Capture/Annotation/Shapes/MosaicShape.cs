@@ -55,10 +55,16 @@ public sealed class MosaicShape : IShape, IDisposable
     public bool HitTest(double x, double y, double tolerance = 4) =>
         Rect.Inflate(tolerance).Contains(x, y);
 
-    public IReadOnlyList<ShapeHandle> GetHandles() => GeometryHelper.GetBoxHandles(Rect);
+    public IReadOnlyList<ShapeHandle> GetHandles() =>
+        GeometryHelper.GetBoxHandlesWithCornerRadius(Rect, Style.CornerRadius);
 
     public void MoveHandle(ShapeHandleKind kind, double x, double y, bool constrain = false)
     {
+        if (kind == ShapeHandleKind.CornerRadius)
+        {
+            Style = Style with { CornerRadius = GeometryHelper.ComputeCornerRadiusFromHandle(Rect, x) };
+            return;
+        }
         Rect = GeometryHelper.MoveBoxHandle(Rect, kind, x, y, constrain, minSize: 8);
         _anchorX = Rect.Left;
         _anchorY = Rect.Top;
@@ -105,10 +111,7 @@ public sealed class MosaicShape : IShape, IDisposable
         var patch = GetOrBuildPatch(ctx.SourceFrame, out var clamped);
         if (patch is null) return;
 
-        canvas.DrawBitmap(
-            patch,
-            (float)(clamped.X - originX),
-            (float)(clamped.Y - originY));
+        GeometryHelper.DrawClippedPatch(canvas, patch, clamped, Rect, Style.CornerRadius, originX, originY);
     }
 
     /// <summary>按桌面绝对网格对齐生成块状平均色，拖动区域边缘时方块稳定不闪烁。</summary>

@@ -113,6 +113,7 @@ public partial class SettingsWindow : Window
         MagZoomVal.Text = $"{s.Capture.MagnifierZoom}x";
         ColorRgbCheck.IsChecked = s.Capture.DefaultColorFormatRgb;
         CloseOnCopyCheck.IsChecked = s.Capture.CloseOnCopy;
+        ApplyToolbarCheckboxes(s.Capture.Toolbar);
 
         SelectComboByTag(SaveFormatCombo, s.Save.Format.ToString());
         QualitySlider.Value = s.Save.JpegQuality;
@@ -276,6 +277,63 @@ public partial class SettingsWindow : Window
         _working.Save.CopyAfterSave = CopyAfterSaveCheck.IsChecked == true;
         _working.Save.Directory = SaveDirBox.Text.Trim();
         _working.Save.FileNameTemplate = FileNameTplBox.Text.Trim();
+        MarkDirty();
+    }
+
+    private (CheckBox Box, Func<ToolbarVisibilitySettings, bool> Get, Action<ToolbarVisibilitySettings, bool> Set)[] GetToolbarVisibilityBindings() =>
+    [
+        (TbShowSelectCheck, t => t.ShowSelect, (t, v) => t.ShowSelect = v),
+        (TbShowRectangleCheck, t => t.ShowRectangle, (t, v) => t.ShowRectangle = v),
+        (TbShowEllipseCheck, t => t.ShowEllipse, (t, v) => t.ShowEllipse = v),
+        (TbShowArrowCheck, t => t.ShowArrow, (t, v) => t.ShowArrow = v),
+        (TbShowLineCheck, t => t.ShowLine, (t, v) => t.ShowLine = v),
+        (TbShowFreehandCheck, t => t.ShowFreehand, (t, v) => t.ShowFreehand = v),
+        (TbShowNumberBadgeCheck, t => t.ShowNumberBadge, (t, v) => t.ShowNumberBadge = v),
+        (TbShowTextCheck, t => t.ShowText, (t, v) => t.ShowText = v),
+        (TbShowMosaicCheck, t => t.ShowMosaic, (t, v) => t.ShowMosaic = v),
+        (TbShowSpotlightCheck, t => t.ShowSpotlight, (t, v) => t.ShowSpotlight = v),
+        (TbShowHighlightCheck, t => t.ShowHighlight, (t, v) => t.ShowHighlight = v),
+        (TbShowEraserCheck, t => t.ShowEraser, (t, v) => t.ShowEraser = v),
+        (TbShowUndoRedoCheck, t => t.ShowUndoRedo, (t, v) => t.ShowUndoRedo = v),
+        (TbShowLongshotCheck, t => t.ShowLongshot, (t, v) => t.ShowLongshot = v),
+        (TbShowCopyCheck, t => t.ShowCopy, (t, v) => t.ShowCopy = v),
+        (TbShowSaveCheck, t => t.ShowSave, (t, v) => t.ShowSave = v),
+        (TbShowPinCheck, t => t.ShowPin, (t, v) => t.ShowPin = v),
+        (TbShowOcrCheck, t => t.ShowOcr, (t, v) => t.ShowOcr = v),
+        (TbShowTranslateCheck, t => t.ShowTranslate, (t, v) => t.ShowTranslate = v),
+    ];
+
+    private void ApplyToolbarCheckboxes(ToolbarVisibilitySettings toolbar)
+    {
+        foreach (var (box, get, _) in GetToolbarVisibilityBindings())
+        {
+            box.IsChecked = get(toolbar);
+        }
+    }
+
+    private void OnToolbarVisibilityChanged(object sender, RoutedEventArgs e)
+    {
+        if (_loading) return;
+        foreach (var (box, _, set) in GetToolbarVisibilityBindings())
+        {
+            set(_working.Capture.Toolbar, box.IsChecked == true);
+        }
+        MarkDirty();
+    }
+
+    private void OnShowAllToolbarButtonsClick(object sender, RoutedEventArgs e)
+    {
+        _working.Capture.Toolbar.ShowAll();
+        var prevLoading = _loading;
+        _loading = true;
+        try
+        {
+            ApplyToolbarCheckboxes(_working.Capture.Toolbar);
+        }
+        finally
+        {
+            _loading = prevLoading;
+        }
         MarkDirty();
     }
 

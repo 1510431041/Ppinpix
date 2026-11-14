@@ -170,6 +170,11 @@ public static class WindowApi
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetCursorPos(int x, int y);
 
+    public const uint MOUSEEVENTF_WHEEL = 0x0800;
+
+    [DllImport("user32.dll")]
+    public static extern void mouse_event(uint dwFlags, int dx, int dy, int dwData, nuint dwExtraInfo);
+
     [DllImport("user32.dll", SetLastError = true)]
     public static extern int GetWindowLong(nint hWnd, int nIndex);
 
