@@ -75,6 +75,43 @@ public sealed class CaptureOutputTests : IDisposable
         Assert.Equal(16, loadedWebp.Height);
     }
 
+    [Fact]
+    public void CopyToClipboard_ShouldExposeValidImageAndRawPngStream()
+    {
+        Exception? threadEx = null;
+        bool copied = false;
+        bool hasImage = false;
+        byte[]? pngHeader = null;
+
+        var sta = new Thread(() =>
+        {
+            try
+            {
+                var frame = CreateSolidFrame(16, 12, b: 30, g: 140, r: 220, a: 255);
+                copied = CaptureOutput.CopyToClipboard(frame);
+                hasImage = System.Windows.Clipboard.ContainsImage();
+                if (System.Windows.Clipboard.GetData("PNG") is MemoryStream ms)
+                {
+                    pngHeader = ms.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                threadEx = ex;
+            }
+        });
+        sta.SetApartmentState(ApartmentState.STA);
+        sta.Start();
+        sta.Join();
+
+        Assert.Null(threadEx);
+        Assert.True(copied);
+        Assert.True(hasImage);
+        Assert.NotNull(pngHeader);
+        Assert.True(pngHeader!.Length >= 8);
+        Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47 }, pngHeader[..4]);
+    }
+
     private static ScreenFrame CreateSolidFrame(int w, int h, byte b, byte g, byte r, byte a)
     {
         int stride = w * 4;

@@ -77,8 +77,8 @@ public static class CaptureOutput
     }
 
     /// <summary>
-    /// 复制到剪贴板。同时放入 CF_BITMAP/CF_DIB（WPF 默认）与 PNG 格式，
-    /// 这样粘贴到 Office、画图、聊天工具里都能拿到合适的格式。
+    /// 复制到剪贴板。同时放入 CF_BITMAP/CF_DIB（WPF 默认）与 PNG 流，
+    /// 这样粘贴到 Office、画图、浏览器、聊天工具里都能拿到合适的格式。
     /// </summary>
     public static bool CopyToClipboard(ScreenFrame frame)
     {
@@ -87,40 +87,54 @@ public static class CaptureOutput
         var data = new DataObject();
         data.SetImage(bitmap);
 
+        MemoryStream? pngStream = null;
         try
         {
-            using var stream = new MemoryStream();
+            pngStream = new MemoryStream();
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
-            encoder.Save(stream);
-            data.SetData("PNG", stream.ToArray());
+            encoder.Save(pngStream);
+            pngStream.Position = 0;
+            // Windows 剪贴板的 "PNG" 格式必须是原始字节流（MemoryStream），不能传 byte[]。
+            // 传 byte[] 会被 WPF 走序列化包装（或 .NET 10 禁用了 BinaryFormatter 导致异常/格式损坏）。
+            data.SetData("PNG", pngStream, autoConvert: false);
         }
         catch (Exception ex)
         {
             Log.Warn("附加 PNG 剪贴板格式失败，仅提供 DIB。", ex);
+            pngStream?.Dispose();
+            pngStream = null;
         }
 
-        // 剪贴板经常被其它进程短暂占用，需要重试。
-        for (int attempt = 0; attempt < ClipboardRetryCount; attempt++)
+        try
         {
-            try
+            // 剪贴板经常被其它进程短暂占用，需要重试。
+            for (int attempt = 0; attempt < ClipboardRetryCount; attempt++)
             {
-                Clipboard.SetDataObject(data, copy: true);
-                return true;
+                try
+                {
+                    if (pngStream is not null) pngStream.Position = 0;
+                    Clipboard.SetDataObject(data, copy: true);
+                    return true;
+                }
+                catch (Exception ex) when (attempt < ClipboardRetryCount - 1)
+                {
+                    Log.Warn($"复制到剪贴板失败，正在重试（{attempt + 1}/{ClipboardRetryCount}）。", ex);
+                    Thread.Sleep(ClipboardRetryDelayMs);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("复制到剪贴板失败。", ex);
+                    return false;
+                }
             }
-            catch (Exception ex) when (attempt < ClipboardRetryCount - 1)
-            {
-                Log.Warn($"复制到剪贴板失败，正在重试（{attempt + 1}/{ClipboardRetryCount}）。", ex);
-                Thread.Sleep(ClipboardRetryDelayMs);
-            }
-            catch (Exception ex)
-            {
-                Log.Error("复制到剪贴板失败。", ex);
-                return false;
-            }
-        }
 
-        return false;
+            return false;
+        }
+        finally
+        {
+            pngStream?.Dispose();
+        }
     }
 
     /// <summary>按设置保存图片，返回完整路径。</summary>
