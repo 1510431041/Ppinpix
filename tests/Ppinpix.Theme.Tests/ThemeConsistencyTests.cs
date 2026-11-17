@@ -127,6 +127,7 @@ public sealed class ThemeConsistencyTests
                 Source = new Uri("pack://application:,,,/Ppinpix.Theme;component/Theme.xaml", UriKind.Absolute),
             };
             ThemeLoader.ApplySettingsTheme(merged, isDark: true);
+            var controls = new ResourceDictionary { Source = ThemeLoader.ControlsUri };
 
             string? root = FindRepoRoot();
             Assert.False(string.IsNullOrWhiteSpace(root), "Could not locate Ppinpix.sln repository root.");
@@ -151,14 +152,97 @@ public sealed class ThemeConsistencyTests
                 foreach (Match match in pattern.Matches(content))
                 {
                     string key = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value;
-                    if (key.StartsWith("Pp.", StringComparison.Ordinal) && !merged.Contains(key))
+                    if (key.StartsWith("Pp.", StringComparison.Ordinal) && !merged.Contains(key) && !controls.Contains(key))
                     {
                         missing.Add($"{key} ({Path.GetRelativePath(root!, file)})");
                     }
                 }
             }
 
-            Assert.True(missing.Count == 0, "发现未在 Theme.xaml 或 ApplySettingsTheme 中定义的主题键：" + string.Join(", ", missing));
+            Assert.True(missing.Count == 0, "发现未在 Theme.xaml / Controls.xaml 或 ApplySettingsTheme 中定义的主题键：" + string.Join(", ", missing));
+        });
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ControlsXaml_AllControlStylesShouldInstantiateAndApplyTemplates(bool isDark)
+    {
+        RunSta(() =>
+        {
+            var host = new System.Windows.Controls.StackPanel();
+            host.Resources.MergedDictionaries.Add(new ResourceDictionary
+            {
+                Source = new Uri("pack://application:,,,/Ppinpix.Theme;component/Theme.xaml", UriKind.Absolute),
+            });
+            host.Resources.MergedDictionaries.Add(new ResourceDictionary { Source = ThemeLoader.ControlsUri });
+            ThemeLoader.ApplySettingsTheme(host.Resources, isDark);
+
+            var combo = new System.Windows.Controls.ComboBox();
+            combo.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "A" });
+            combo.Items.Add(new System.Windows.Controls.ComboBoxItem { Content = "B" });
+            combo.SelectedIndex = 0;
+            var editableCombo = new System.Windows.Controls.ComboBox { IsEditable = true, Text = "gpt" };
+            var list = new System.Windows.Controls.ListBox();
+            list.Items.Add(new System.Windows.Controls.ListBoxItem { Content = "profile" });
+            var expander = new System.Windows.Controls.Expander { Header = "高级", Content = new System.Windows.Controls.TextBlock { Text = "body" }, IsExpanded = true };
+
+            System.Windows.Controls.Control[] controls =
+            [
+                new System.Windows.Controls.Button { Content = "次要" },
+                new System.Windows.Controls.Button { Content = "主要", Style = (Style)host.FindResource("Pp.Button.Primary") },
+                new System.Windows.Controls.Button { Content = "危险", Style = (Style)host.FindResource("Pp.Button.Danger") },
+                new System.Windows.Controls.Button { Content = "幽灵", Style = (Style)host.FindResource("Pp.Button.Ghost") },
+                new System.Windows.Controls.CheckBox { Content = "开关", IsChecked = true },
+                new System.Windows.Controls.CheckBox { Content = "胶囊", IsChecked = true, Style = (Style)host.FindResource("Pp.Chip") },
+                new System.Windows.Controls.TextBox { Text = "text", AcceptsReturn = true },
+                new System.Windows.Controls.PasswordBox(),
+                combo,
+                editableCombo,
+                new System.Windows.Controls.Slider { Minimum = 0, Maximum = 10, Value = 4, Width = 160 },
+                list,
+                expander,
+            ];
+
+            foreach (var control in controls)
+            {
+                host.Children.Add(control);
+            }
+
+            host.Measure(new Size(480, 900));
+            host.Arrange(new Rect(0, 0, 480, 900));
+            host.UpdateLayout();
+
+            foreach (var control in controls)
+            {
+                Assert.True(control.IsMeasureValid, $"{control.GetType().Name} 未能完成布局。");
+                Assert.True(
+                    System.Windows.Media.VisualTreeHelper.GetChildrenCount(control) > 0,
+                    $"{control.GetType().Name} 的自定义模板没有生成可视树。");
+                Assert.True(control.DesiredSize.Height >= 20, $"{control.GetType().Name} 高度异常：{control.DesiredSize.Height}");
+            }
+        });
+    }
+
+    [Fact]
+    public void ApplySettingsTheme_ShouldPopulateControlDerivedKeys()
+    {
+        RunSta(() =>
+        {
+            var dict = new ResourceDictionary();
+            foreach (bool isDark in new[] { false, true })
+            {
+                ThemeLoader.ApplySettingsTheme(dict, isDark);
+                foreach (string key in new[]
+                {
+                    "Pp.Settings.InputBorder", "Pp.Settings.PressedBg", "Pp.Settings.TextDisabled",
+                    "Pp.Settings.ControlBg", "Pp.Settings.HoverBg",
+                })
+                {
+                    Assert.True(dict.Contains(key), $"Missing settings key '{key}' (dark={isDark}).");
+                    Assert.IsType<SolidColorBrush>(dict[key]);
+                }
+            }
         });
     }
 

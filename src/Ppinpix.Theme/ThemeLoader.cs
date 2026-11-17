@@ -13,6 +13,10 @@ namespace Ppinpix.Theme;
 public static class ThemeLoader
 {
     private static readonly Uri ThemeUri = new("pack://application:,,,/Ppinpix.Theme;component/Theme.xaml", UriKind.Absolute);
+
+    /// <summary>通用控件样式（按钮 / 开关 / 输入框 / 下拉框 / 滑块 / 滚动条等）。窗口需合并后使用。</summary>
+    public static readonly Uri ControlsUri = new("pack://application:,,,/Ppinpix.Theme;component/Controls.xaml", UriKind.Absolute);
+
     private static bool _loaded;
 
     public static void EnsureLoaded(Application application)
@@ -68,6 +72,11 @@ public static class ThemeLoader
         target["Pp.Settings.TextSecondary"] = secondaryBrush;
         target["Pp.Settings.ControlBg"] = controlBrush;
         target["Pp.Settings.HoverBg"] = hoverBrush;
+
+        // 控件描边 / 按下态 / 禁用文字：由浅深色基准派生，供 Controls.xaml 使用
+        target["Pp.Settings.InputBorder"] = FreezeBrush(isDark ? Color.FromRgb(0x3B, 0x42, 0x4D) : Color.FromRgb(0xD3, 0xD8, 0xDF));
+        target["Pp.Settings.PressedBg"] = FreezeBrush(isDark ? Tokens.SurfacePressed : Color.FromArgb(28, 0, 0, 0));
+        target["Pp.Settings.TextDisabled"] = FreezeBrush(isDark ? Tokens.TextDisabled : Color.FromRgb(0x9A, 0xA3, 0xAF));
 
         // 兼容简短命名键（Settings 子面板与自定义控件共用）
         target["Pp.Settings.Card"] = cardBrush;

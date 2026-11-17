@@ -8,6 +8,7 @@ using Ppinpix.Core.Capture;
 using Ppinpix.Core.Display;
 using Ppinpix.Ocr;
 using Ppinpix.Ocr.Models;
+using Ppinpix.Theme;
 
 namespace Ppinpix.App.Ocr;
 
@@ -27,6 +28,7 @@ public partial class OcrResultWindow : Window
         Action<string>? onSendToTranslate = null)
     {
         InitializeComponent();
+        ThemeLoader.ApplySettingsTheme(Resources, isDark: true);
 
         _frame = frame;
         _ocrService = ocrService;
@@ -94,14 +96,15 @@ public partial class OcrResultWindow : Window
         {
             BarcodePanel.Visibility = Visibility.Visible;
             BarcodeList.Children.Clear();
-            BarcodeList.Children.Add(new TextBlock
+            var barcodeTitle = new TextBlock
             {
                 Text = $"检测到 {result.Barcodes.Count} 个二维码 / 条码：",
-                Foreground = new SolidColorBrush(Color.FromRgb(0x8F, 0xB8, 0xFF)),
-                FontSize = 11.5,
+                FontSize = 12,
                 FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(0, 0, 0, 6),
-            });
+                Margin = new Thickness(0, 0, 0, 8),
+            };
+            barcodeTitle.SetResourceReference(TextBlock.ForegroundProperty, "Pp.Accent");
+            BarcodeList.Children.Add(barcodeTitle);
 
             foreach (var bc in result.Barcodes)
             {
@@ -109,12 +112,9 @@ public partial class OcrResultWindow : Window
                 var copyBtn = new Button
                 {
                     Content = "复制",
-                    Padding = new Thickness(8, 2, 8, 2),
+                    MinHeight = 28,
+                    Padding = new Thickness(12, 0, 12, 0),
                     Margin = new Thickness(6, 0, 0, 0),
-                    Background = new SolidColorBrush(Color.FromRgb(0x36, 0x3D, 0x48)),
-                    Foreground = Brushes.White,
-                    BorderThickness = new Thickness(0),
-                    Cursor = Cursors.Hand,
                 };
                 copyBtn.Click += (_, _) =>
                 {
@@ -129,12 +129,10 @@ public partial class OcrResultWindow : Window
                     var openBtn = new Button
                     {
                         Content = "打开链接",
-                        Padding = new Thickness(8, 2, 8, 2),
+                        MinHeight = 28,
+                        Padding = new Thickness(12, 0, 12, 0),
                         Margin = new Thickness(6, 0, 0, 0),
-                        Background = new SolidColorBrush(Color.FromRgb(0x2F, 0x80, 0xFF)),
-                        Foreground = Brushes.White,
-                        BorderThickness = new Thickness(0),
-                        Cursor = Cursors.Hand,
+                        Style = (Style)FindResource("Pp.Button.Primary"),
                     };
                     openBtn.Click += (_, _) => Process.Start(new ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
                     DockPanel.SetDock(openBtn, Dock.Right);
@@ -146,7 +144,6 @@ public partial class OcrResultWindow : Window
                     Text = $"[{bc.RawFormat}] {bc.Content}",
                     TextTrimming = TextTrimming.CharacterEllipsis,
                     VerticalAlignment = VerticalAlignment.Center,
-                    Foreground = new SolidColorBrush(Color.FromRgb(0xF2, 0xF4, 0xF7)),
                     FontSize = 12.5,
                     ToolTip = bc.Content,
                 });

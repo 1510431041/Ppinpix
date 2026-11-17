@@ -15,10 +15,11 @@ public sealed class HotkeyBox : Border
 
     public HotkeyBox()
     {
-        CornerRadius = new CornerRadius(5);
+        CornerRadius = new CornerRadius(6);
         BorderThickness = new Thickness(1);
-        Padding = new Thickness(10, 6, 10, 6);
-        MinWidth = 170;
+        Padding = new Thickness(12, 0, 12, 0);
+        MinWidth = 190;
+        MinHeight = 32;
         Cursor = Cursors.Hand;
         Focusable = true;
 
@@ -31,7 +32,7 @@ public sealed class HotkeyBox : Border
         Child = _text;
 
         SetResourceReference(BackgroundProperty, "Pp.Settings.Input");
-        SetResourceReference(BorderBrushProperty, "Pp.Settings.Border");
+        SetResourceReference(BorderBrushProperty, "Pp.Settings.InputBorder");
         _text.SetResourceReference(TextBlock.ForegroundProperty, "Pp.Settings.Text");
 
         MouseLeftButtonDown += (_, e) =>
@@ -120,12 +121,12 @@ public sealed class HotkeyBox : Border
         if (_recording)
         {
             _text.Text = "请按下新快捷键（Esc 取消）…";
-            BorderBrush = new SolidColorBrush(Color.FromRgb(0x2F, 0x80, 0xFF));
+            SetResourceReference(BorderBrushProperty, "Pp.Accent");
         }
         else
         {
             _text.Text = string.IsNullOrWhiteSpace(_gestureText) ? "未绑定" : _gestureText;
-            SetResourceReference(BorderBrushProperty, "Pp.Settings.Border");
+            SetResourceReference(BorderBrushProperty, "Pp.Settings.InputBorder");
         }
     }
 

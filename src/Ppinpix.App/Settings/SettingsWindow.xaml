@@ -3,553 +3,658 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Ppinpix.App.Settings"
         Title="设置 — Ppinpix"
-        Width="860"
-        Height="620"
-        MinWidth="740"
-        MinHeight="520"
+        Width="900"
+        Height="660"
+        MinWidth="780"
+        MinHeight="560"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource Pp.Settings.WindowBg}"
         Foreground="{DynamicResource Pp.Settings.TextPrimary}"
         FontFamily="{DynamicResource Pp.UiFont}"
+        FontSize="13"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal"
         ShowInTaskbar="True">
     <Window.Resources>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Ppinpix.Theme;component/Controls.xaml" />
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="Margin" Value="0,4,0,4" />
-        </Style>
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
+            </Style>
 
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{DynamicResource Pp.Settings.ControlBg}" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="CaretBrush" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Pp.Settings.CardStroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,5" />
-        </Style>
+            <!-- 左侧导航项：图标 + 文字，选中时左侧显示品牌色指示条 -->
+            <Style x:Key="NavItem" TargetType="ListBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
+                <Setter Property="Padding" Value="12,0" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Margin" Value="0,2" />
+                <Setter Property="Cursor" Value="Hand" />
+                <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Grid>
+                                <Border x:Name="Bd"
+                                        Background="Transparent"
+                                        CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter VerticalAlignment="Center" />
+                                </Border>
+                                <Border x:Name="Bar"
+                                        Width="3"
+                                        Height="16"
+                                        Margin="0,0,0,0"
+                                        HorizontalAlignment="Left"
+                                        CornerRadius="1.5"
+                                        Background="{DynamicResource Pp.Accent}"
+                                        Visibility="Collapsed" />
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Pp.Settings.HoverBg}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Pp.Settings.NavSelectedBg}" />
+                                    <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
-        <Style TargetType="PasswordBox">
-            <Setter Property="Background" Value="{DynamicResource Pp.Settings.ControlBg}" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="CaretBrush" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Pp.Settings.CardStroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,5" />
-        </Style>
-
-        <Style TargetType="ComboBox">
-            <Setter Property="Foreground" Value="#FF1B1F24" />
-        </Style>
-
-        <Style TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="#FF1B1F24" />
-        </Style>
-
-        <Style TargetType="Button">
-            <Setter Property="Background" Value="{DynamicResource Pp.Settings.ControlBg}" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Pp.Settings.CardStroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.88" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.76" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.45" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CardBorder" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource Pp.Settings.CardBg}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Pp.Settings.CardStroke}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="8" />
-            <Setter Property="Padding" Value="16,14" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-        </Style>
-
-        <Style x:Key="SectionTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="15.5" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="Margin" Value="0,0,0,12" />
-        </Style>
-
-        <Style x:Key="CardHeading" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="13.5" />
-            <Setter Property="FontWeight" Value="SemiBold" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-            <Setter Property="Margin" Value="0,0,0,8" />
-        </Style>
-
-        <Style x:Key="MutedLabel" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextSecondary}" />
-            <Setter Property="TextWrapping" Value="Wrap" />
-        </Style>
+            <Style x:Key="NavIcon" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{DynamicResource Pp.IconFont}" />
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="Width" Value="24" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextSecondary}" />
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="208" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="178" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- ==================== 左侧导航 ==================== -->
+        <Border Grid.Column="0"
+                Background="{DynamicResource Pp.Settings.CardBg}"
+                BorderBrush="{DynamicResource Pp.Settings.CardStroke}"
+                BorderThickness="0,0,1,0">
+            <DockPanel Margin="12,18,12,14">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="8,0,0,18">
+                    <Image Width="28"
+                           Height="28"
+                           Source="pack://application:,,,/Ppinpix;component/Assets/app.ico"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="Ppinpix" FontSize="16" FontWeight="SemiBold" />
+                        <TextBlock Text="设置" FontSize="12" Foreground="{DynamicResource Pp.Settings.TextSecondary}" />
+                    </StackPanel>
+                </StackPanel>
 
-            <!-- 左侧导航栏 -->
-            <Border Grid.Column="0"
-                    BorderBrush="{DynamicResource Pp.Settings.CardStroke}"
-                    BorderThickness="0,0,1,0"
-                    Padding="10,14">
+                <TextBlock x:Name="FooterStatusText"
+                           DockPanel.Dock="Bottom"
+                           Margin="8,10,4,0"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource Pp.Settings.TextSecondary}"
+                           Text="更改会自动保存" />
+
                 <ListBox x:Name="NavList"
                          Background="Transparent"
                          BorderThickness="0"
+                         Padding="0"
+                         ItemContainerStyle="{StaticResource NavItem}"
                          SelectionChanged="OnNavSelectionChanged">
-                    <ListBox.ItemContainerStyle>
-                        <Style TargetType="ListBoxItem">
-                            <Setter Property="Foreground" Value="{DynamicResource Pp.Settings.TextPrimary}" />
-                            <Setter Property="Padding" Value="12,9" />
-                            <Setter Property="Margin" Value="0,2" />
-                            <Setter Property="FontSize" Value="13.5" />
-                            <Setter Property="Cursor" Value="Hand" />
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="ListBoxItem">
-                                        <Border x:Name="Bd"
-                                                Background="Transparent"
-                                                CornerRadius="6"
-                                                Padding="{TemplateBinding Padding}">
-                                            <ContentPresenter VerticalAlignment="Center" />
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Pp.Settings.HoverBg}" />
-                                            </Trigger>
-                                            <Trigger Property="IsSelected" Value="True">
-                                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource Pp.Settings.NavSelectedBg}" />
-                                                <Setter Property="FontWeight" Value="SemiBold" />
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </ListBox.ItemContainerStyle>
-                    <ListBoxItem Content="常规" Tag="General" />
-                    <ListBoxItem Content="快捷键" Tag="Hotkeys" />
-                    <ListBoxItem Content="截图与保存" Tag="Capture" />
-                    <ListBoxItem Content="贴图" Tag="Pin" />
-                    <ListBoxItem Content="离线 OCR" Tag="Ocr" />
-                    <ListBoxItem Content="翻译与大模型" Tag="Translate" />
-                    <ListBoxItem Content="关于与隐私" Tag="About" />
+                    <ListBoxItem Tag="General">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE713;" />
+                            <TextBlock Text="常规" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Hotkeys">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE765;" />
+                            <TextBlock Text="快捷键" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Capture">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE722;" />
+                            <TextBlock Text="截图与保存" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Toolbar">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE70F;" />
+                            <TextBlock Text="截图工具栏" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Pin">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE718;" />
+                            <TextBlock Text="贴图" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Ocr">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE8A5;" />
+                            <TextBlock Text="文字识别" />
+                        </StackPanel>
+                    </ListBoxItem>
+                    <ListBoxItem Tag="Translate">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource NavIcon}" Text="&#xE774;" />
+                            <TextBlock Text="翻译与模型" />
+                        </StackPanel>
+                    </ListBoxItem>
                 </ListBox>
-            </Border>
+            </DockPanel>
+        </Border>
 
-            <!-- 右侧内容区 -->
-            <Grid Grid.Column="1" Margin="18,16,18,12">
-                <!-- 1. 常规 -->
-                <ScrollViewer x:Name="PageGeneral" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="常规" Style="{StaticResource SectionTitle}" />
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="启动与外观" Style="{StaticResource CardHeading}" />
-                                <CheckBox x:Name="AutoStartCheck"
-                                          Content="开机自动启动 Ppinpix（静默驻留系统托盘）"
-                                          Checked="OnGeneralChanged"
-                                          Unchecked="OnGeneralChanged" />
+        <!-- ==================== 右侧内容 ==================== -->
+        <Grid Grid.Column="1" Margin="32,26,12,0">
 
-                                <DockPanel Margin="0,10,0,4">
+            <!-- 1. 常规 -->
+            <ScrollViewer x:Name="PageGeneral" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <TextBlock Text="常规" Style="{StaticResource Pp.PageTitle}" />
+                    <TextBlock Text="启动方式、界面外观与提示音" Style="{StaticResource Pp.PageSubtitle}" />
+
+                    <TextBlock Text="启动与外观" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="AutoStartCheck" Checked="OnGeneralChanged" Unchecked="OnGeneralChanged">
+                                    <StackPanel>
+                                        <TextBlock Text="开机自动启动" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="静默驻留在系统托盘，随时按快捷键截图" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
                                     <ComboBox x:Name="ThemeCombo"
                                               DockPanel.Dock="Right"
                                               Width="170"
-                                              Padding="8,5"
                                               SelectionChanged="OnThemeChanged">
                                         <ComboBoxItem Content="跟随 Windows 系统" Tag="System" />
                                         <ComboBoxItem Content="始终浅色" Tag="Light" />
                                         <ComboBoxItem Content="始终深色" Tag="Dark" />
                                     </ComboBox>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="设置界面主题" FontSize="13" />
-                                        <TextBlock Text="截图覆盖层与工具栏固定为高对比深色，设置页可随系统切换" Style="{StaticResource MutedLabel}" />
+                                        <TextBlock Text="设置界面主题" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="截图界面固定为深色，不受此项影响" Style="{StaticResource Pp.RowDesc}" />
                                     </StackPanel>
                                 </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="AnimationsCheck" Content="界面动画" Checked="OnGeneralChanged" Unchecked="OnGeneralChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <CheckBox x:Name="SoundCheck" Content="截图完成时播放提示音" Checked="OnGeneralChanged" Unchecked="OnGeneralChanged" />
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                                <CheckBox x:Name="AnimationsCheck"
-                                          Margin="0,10,0,4"
-                                          Content="启用界面微交互与平滑过渡动画"
-                                          Checked="OnGeneralChanged"
-                                          Unchecked="OnGeneralChanged" />
-                                <CheckBox x:Name="SoundCheck"
-                                          Content="截图完成时播放提示音"
-                                          Checked="OnGeneralChanged"
-                                          Unchecked="OnGeneralChanged" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                    <TextBlock Text="关于与隐私" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <StackPanel>
+                                    <TextBlock x:Name="AppVersionText" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                    <TextBlock TextWrapping="Wrap" LineHeight="20" Style="{StaticResource Pp.RowDesc}">
+                                        截图、标注、贴图、取色、OCR 与扫码全部在本地完成，没有遥测，也不会自动联网更新。
+                                        <LineBreak />
+                                        只有你主动使用「截图翻译」或测试接口时，内容才会直连你自己配置的模型地址。
+                                        <LineBreak />
+                                        API 密钥与代理密码使用 Windows DPAPI（当前用户）加密保存，不写入明文配置或日志。
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <WrapPanel>
+                                    <Button Content="打开数据目录" Margin="0,0,8,0" Click="OnOpenAppDataClick" />
+                                    <Button Content="打开日志目录" Margin="0,0,8,0" Click="OnOpenLogsClick" />
+                                    <Button Content="导出配置备份（已脱敏）" Margin="0,0,8,0" Click="OnExportBackupClick" />
+                                    <Button Content="恢复出厂设置"
+                                            Style="{StaticResource Pp.Button.Danger}"
+                                            Click="OnFactoryResetClick" />
+                                </WrapPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
-                <!-- 2. 快捷键 -->
-                <ScrollViewer x:Name="PageHotkeys" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <DockPanel Margin="0,0,0,12">
-                            <Button DockPanel.Dock="Right"
-                                    Content="恢复默认快捷键"
-                                    Padding="12,5"
-                                    Click="OnResetHotkeysClick" />
-                            <TextBlock Text="快捷键" Style="{StaticResource SectionTitle}" Margin="0" VerticalAlignment="Center" />
-                        </DockPanel>
+            <!-- 2. 快捷键 -->
+            <ScrollViewer x:Name="PageHotkeys" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right"
+                                VerticalAlignment="Top"
+                                Content="恢复默认"
+                                Click="OnResetHotkeysClick" />
+                        <TextBlock Text="快捷键" Style="{StaticResource Pp.PageTitle}" />
+                    </DockPanel>
+                    <TextBlock Text="点击输入框后按下组合键；Esc 取消录制，Backspace / Delete 清除。" Style="{StaticResource Pp.PageSubtitle}" />
 
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="点击右侧输入框后按下目标组合键；Esc 取消录制，Backspace/Delete 清除绑定。"
-                                           Style="{StaticResource MutedLabel}"
-                                           Margin="0,0,0,12" />
+                    <Border Style="{StaticResource Pp.Card}" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkCapture" DockPanel.Dock="Right" />
+                                    <TextBlock Text="区域截图" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkPinClipboard" DockPanel.Dock="Right" />
+                                    <TextBlock Text="把剪贴板内容贴到屏幕" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkCaptureOcr" DockPanel.Dock="Right" />
+                                    <TextBlock Text="截图并直接识字" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkCaptureTranslate" DockPanel.Dock="Right" />
+                                    <TextBlock Text="截图并直接翻译" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkTogglePins" DockPanel.Dock="Right" />
+                                    <TextBlock Text="显示 / 隐藏全部贴图" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <DockPanel>
+                                    <local:HotkeyBox x:Name="HkSuspend" DockPanel.Dock="Right" />
+                                    <TextBlock Text="暂停 / 恢复全局快捷键" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                                <Grid x:Name="HotkeyGrid">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
+                    <TextBlock x:Name="HotkeyWarningText"
+                               Margin="4,0,0,0"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource Pp.Danger}"
+                               Visibility="Collapsed" />
+                </StackPanel>
+            </ScrollViewer>
 
-                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="区域截图" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkCapture" Grid.Row="0" Grid.Column="1" Margin="0,4" />
+            <!-- 3. 截图与保存 -->
+            <ScrollViewer x:Name="PageCapture" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <TextBlock Text="截图与保存" Style="{StaticResource Pp.PageTitle}" />
+                    <TextBlock Text="选区行为、放大镜，以及图片的保存方式" Style="{StaticResource Pp.PageSubtitle}" />
 
-                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="将剪贴板内容贴到屏幕" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkPinClipboard" Grid.Row="1" Grid.Column="1" Margin="0,4" />
-
-                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="截图并直接 OCR 识字" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkCaptureOcr" Grid.Row="2" Grid.Column="1" Margin="0,4" />
-
-                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="截图并直接翻译" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkCaptureTranslate" Grid.Row="3" Grid.Column="1" Margin="0,4" />
-
-                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="显示 / 隐藏全部贴图" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkTogglePins" Grid.Row="4" Grid.Column="1" Margin="0,4" />
-
-                                    <TextBlock Grid.Row="5" Grid.Column="0" Text="全局暂停 / 恢复热键" VerticalAlignment="Center" Margin="0,8" />
-                                    <local:HotkeyBox x:Name="HkSuspend" Grid.Row="5" Grid.Column="1" Margin="0,4" />
-                                </Grid>
-
-                                <TextBlock x:Name="HotkeyWarningText"
-                                           Margin="0,10,0,0"
-                                           Foreground="#FFF04438"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"
-                                           Visibility="Collapsed" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- 3. 截图与保存 -->
-                <ScrollViewer x:Name="PageCapture" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="截图与保存" Style="{StaticResource SectionTitle}" />
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="捕获与选区交互" Style="{StaticResource CardHeading}" />
-                                <DockPanel Margin="0,2,0,8">
+                    <TextBlock Text="选区与吸附" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
                                     <ComboBox x:Name="DelayCombo"
                                               DockPanel.Dock="Right"
                                               Width="140"
-                                              Padding="8,4"
                                               SelectionChanged="OnCaptureChanged">
-                                        <ComboBoxItem Content="不延迟 (0 秒)" Tag="0" />
+                                        <ComboBoxItem Content="不延迟" Tag="0" />
                                         <ComboBoxItem Content="延迟 1 秒" Tag="1000" />
                                         <ComboBoxItem Content="延迟 2 秒" Tag="2000" />
                                         <ComboBoxItem Content="延迟 3 秒" Tag="3000" />
                                         <ComboBoxItem Content="延迟 5 秒" Tag="5000" />
                                         <ComboBoxItem Content="延迟 10 秒" Tag="10000" />
                                     </ComboBox>
-                                    <TextBlock Text="默认抓屏延迟（用于截取弹出菜单）" VerticalAlignment="Center" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="抓屏延迟" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="用于截取一闪而过的弹出菜单" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
                                 </DockPanel>
-
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
                                 <CheckBox x:Name="IncludeCursorCheck" Content="截图中包含鼠标指针" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-                                <CheckBox x:Name="SnapEnabledCheck" Content="自动识别并吸附窗口与任务栏边界" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-                                <CheckBox x:Name="SnapControlsCheck" Content="进一步吸附窗口内部控件元素（UIA 智能检测）" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-
-                                <DockPanel Margin="0,6,0,6">
-                                    <TextBlock x:Name="SnapThresholdVal" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" />
-                                    <Slider x:Name="SnapThresholdSlider" DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="40" TickFrequency="2" IsSnapToTickEnabled="True" ValueChanged="OnCaptureSliderChanged" />
-                                    <TextBlock Text="吸附触发距离 (DIP)" VerticalAlignment="Center" />
-                                </DockPanel>
-
-                                <CheckBox x:Name="ShowMagnifierCheck" Content="选区前与微调时显示像素放大镜" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-                                <CheckBox x:Name="HideMagnifierDragCheck" Content="拖拽框选期间自动隐藏放大镜，避免遮挡目标" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-
-                                <DockPanel Margin="0,6,0,6">
-                                    <TextBlock x:Name="MagZoomVal" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" />
-                                    <Slider x:Name="MagZoomSlider" DockPanel.Dock="Right" Width="170" Minimum="2" Maximum="16" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnCaptureSliderChanged" />
-                                    <TextBlock Text="放大镜倍率" VerticalAlignment="Center" />
-                                </DockPanel>
-
-                                <CheckBox x:Name="ColorRgbCheck" Content="取色默认使用 RGB 格式（按 C 键复制，Shift 键可随时切换）" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-                                <CheckBox x:Name="CloseOnCopyCheck" Content="复制到剪贴板后立即退出截图界面" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="保存格式与输出路径" Style="{StaticResource CardHeading}" />
-                                <Grid Margin="0,2,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="16" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock Text="默认图片格式" Style="{StaticResource MutedLabel}" Margin="0,0,0,4" />
-                                        <ComboBox x:Name="SaveFormatCombo" Padding="8,5" SelectionChanged="OnCaptureChanged">
-                                            <ComboBoxItem Content="PNG（无损）" Tag="Png" />
-                                            <ComboBoxItem Content="JPEG（有损小体积）" Tag="Jpeg" />
-                                            <ComboBoxItem Content="WebP（高压缩率）" Tag="Webp" />
-                                        </ComboBox>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="SnapEnabledCheck" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged">
+                                    <StackPanel>
+                                        <TextBlock Text="吸附窗口与任务栏边界" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="选区靠近窗口边缘时自动对齐" Style="{StaticResource Pp.RowDesc}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2">
-                                        <DockPanel Margin="0,0,0,4">
-                                            <TextBlock x:Name="QualityVal" DockPanel.Dock="Right" Style="{StaticResource MutedLabel}" />
-                                            <TextBlock Text="有损压缩质量" Style="{StaticResource MutedLabel}" />
-                                        </DockPanel>
-                                        <Slider x:Name="QualitySlider" Minimum="10" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnCaptureSliderChanged" />
+                                </CheckBox>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="SnapControlsCheck" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged">
+                                    <StackPanel>
+                                        <TextBlock Text="吸附窗口内部控件" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="通过 UIA 识别按钮、输入框等控件区域" Style="{StaticResource Pp.RowDesc}" />
                                     </StackPanel>
-                                </Grid>
-
-                                <CheckBox x:Name="CopyAfterSaveCheck" Content="保存文件后同时写入剪贴板" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
-
-                                <TextBlock Text="保存目录" Style="{StaticResource MutedLabel}" Margin="0,8,0,4" />
-                                <DockPanel LastChildFill="True">
-                                    <Button DockPanel.Dock="Right" Content="打开" Padding="10,5" Margin="6,0,0,0" Click="OnOpenSaveDirClick" />
-                                    <Button DockPanel.Dock="Right" Content="浏览…" Padding="10,5" Margin="6,0,0,0" Click="OnBrowseSaveDirClick" />
-                                    <TextBox x:Name="SaveDirBox" TextChanged="OnCaptureChanged" />
+                                </CheckBox>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <DockPanel>
+                                    <TextBlock x:Name="SnapThresholdVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" />
+                                    <Slider x:Name="SnapThresholdSlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="0"
+                                            Maximum="40"
+                                            TickFrequency="2"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnCaptureSliderChanged" />
+                                    <TextBlock Text="吸附触发距离" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
                                 </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                                <TextBlock Text="文件名模板（支持 {yyyy} {MM} {dd} {HH} {mm} {ss} {w} {h}）" Style="{StaticResource MutedLabel}" Margin="0,10,0,4" />
-                                <TextBox x:Name="FileNameTplBox" TextChanged="OnCaptureChanged" />
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <DockPanel Margin="0,0,0,4">
-                                    <Button DockPanel.Dock="Right" Content="全部显示" Padding="10,4" Click="OnShowAllToolbarButtonsClick" />
-                                    <TextBlock Text="截图工具栏按钮显示" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="放大镜与取色" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="ShowMagnifierCheck" Content="显示像素放大镜" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="HideMagnifierDragCheck" Content="拖拽框选时自动隐藏放大镜" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <TextBlock x:Name="MagZoomVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" />
+                                    <Slider x:Name="MagZoomSlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="2"
+                                            Maximum="16"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnCaptureSliderChanged" />
+                                    <TextBlock Text="放大镜倍率" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
                                 </DockPanel>
-                                <TextBlock Text="取消勾选可精简截图工具栏图标；隐藏后的功能仍可通过对应快捷键触发。" Style="{StaticResource MutedLabel}" Margin="0,0,0,10" />
-                                <UniformGrid Columns="4">
-                                    <CheckBox x:Name="TbShowSelectCheck" Content="选择" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowRectangleCheck" Content="矩形" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowEllipseCheck" Content="椭圆" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowArrowCheck" Content="箭头" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowLineCheck" Content="直线" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowFreehandCheck" Content="画笔" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowNumberBadgeCheck" Content="序号" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowTextCheck" Content="文字" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowMosaicCheck" Content="马赛克" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowSpotlightCheck" Content="聚光灯" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowHighlightCheck" Content="高亮" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowEraserCheck" Content="橡皮" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowUndoRedoCheck" Content="撤销/重做" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowLongshotCheck" Content="长截图" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowCopyCheck" Content="复制" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowSaveCheck" Content="保存" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowPinCheck" Content="钉图" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowOcrCheck" Content="文字识别" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                    <CheckBox x:Name="TbShowTranslateCheck" Content="翻译" Margin="0,4,8,4" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
-                                </UniformGrid>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <CheckBox x:Name="ColorRgbCheck" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged">
+                                    <StackPanel>
+                                        <TextBlock Text="取色默认使用 RGB 格式" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="按 C 复制颜色，Shift 随时切换 RGB / HEX" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                <!-- 4. 贴图 -->
-                <ScrollViewer x:Name="PagePin" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="贴图" Style="{StaticResource SectionTitle}" />
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="窗口行为" Style="{StaticResource CardHeading}" />
-                                <DockPanel Margin="0,4,0,10">
-                                    <TextBlock x:Name="PinOpacityVal" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" />
-                                    <Slider x:Name="PinOpacitySlider" DockPanel.Dock="Right" Width="190" Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnPinSliderChanged" />
-                                    <TextBlock Text="默认不透明度" VerticalAlignment="Center" />
+                    <TextBlock Text="完成与保存" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="CloseOnCopyCheck" Content="复制到剪贴板后立即退出截图" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="CopyAfterSaveCheck" Content="保存文件后同时复制到剪贴板" Checked="OnCaptureChanged" Unchecked="OnCaptureChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <ComboBox x:Name="SaveFormatCombo"
+                                              DockPanel.Dock="Right"
+                                              Width="190"
+                                              SelectionChanged="OnCaptureChanged">
+                                        <ComboBoxItem Content="PNG（无损）" Tag="Png" />
+                                        <ComboBoxItem Content="JPEG（体积小）" Tag="Jpeg" />
+                                        <ComboBoxItem Content="WebP（高压缩）" Tag="Webp" />
+                                    </ComboBox>
+                                    <TextBlock Text="默认图片格式" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
                                 </DockPanel>
-
-                                <DockPanel Margin="0,4,0,10">
-                                    <TextBlock x:Name="PinMaxVal" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" />
-                                    <Slider x:Name="PinMaxSlider" DockPanel.Dock="Right" Width="190" Minimum="1" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="OnPinSliderChanged" />
-                                    <TextBlock Text="同时存在贴图上限（超出自动关闭最早一张）" VerticalAlignment="Center" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <TextBlock x:Name="QualityVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" />
+                                    <Slider x:Name="QualitySlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="10"
+                                            Maximum="100"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnCaptureSliderChanged" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="有损压缩质量" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="仅对 JPEG / WebP 生效" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
                                 </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <StackPanel>
+                                    <TextBlock Text="保存目录" Style="{StaticResource Pp.RowTitle}" Margin="0,0,0,8" />
+                                    <DockPanel LastChildFill="True">
+                                        <Button DockPanel.Dock="Right" Content="打开" Margin="8,0,0,0" Click="OnOpenSaveDirClick" />
+                                        <Button DockPanel.Dock="Right" Content="浏览…" Margin="8,0,0,0" Click="OnBrowseSaveDirClick" />
+                                        <TextBox x:Name="SaveDirBox" TextChanged="OnCaptureChanged" />
+                                    </DockPanel>
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <StackPanel>
+                                    <TextBlock Text="文件名模板" Style="{StaticResource Pp.RowTitle}" />
+                                    <TextBlock Text="可用变量：{yyyy} {MM} {dd} {HH} {mm} {ss} {w} {h}" Style="{StaticResource Pp.RowDesc}" Margin="0,2,0,8" />
+                                    <TextBox x:Name="FileNameTplBox" TextChanged="OnCaptureChanged" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
 
-                                <CheckBox x:Name="PinShadowCheck" Content="贴图四周显示投影与细微边框" Checked="OnPinChanged" Unchecked="OnPinChanged" />
-                                <CheckBox x:Name="PinPixelCheck" Content="尽量保持 1:1 物理像素锐利比例" Checked="OnPinChanged" Unchecked="OnPinChanged" />
-                                <CheckBox x:Name="PinRestoreCheck" Content="下次启动 Ppinpix 时自动恢复未关闭的贴图" Checked="OnPinChanged" Unchecked="OnPinChanged" />
-                                <CheckBox x:Name="PinTextSelectCheck" Content="在贴图上启用离线 OCR 划词复制（按住空格可暂时穿透拖动窗口）" Checked="OnPinChanged" Unchecked="OnPinChanged" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+            <!-- 4. 截图工具栏 -->
+            <ScrollViewer x:Name="PageToolbar" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right"
+                                VerticalAlignment="Top"
+                                Content="全部显示"
+                                Click="OnShowAllToolbarButtonsClick" />
+                        <TextBlock Text="截图工具栏" Style="{StaticResource Pp.PageTitle}" />
+                    </DockPanel>
+                    <TextBlock Text="点击切换按钮的显示与隐藏。隐藏后只是不再占用工具栏位置，对应快捷键仍然可用。"
+                               Style="{StaticResource Pp.PageSubtitle}" />
 
-                <!-- 5. 离线 OCR -->
-                <ScrollViewer x:Name="PageOcr" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="离线 OCR（本地识别，零联网）" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="标注工具" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}" Padding="16,16,8,8">
+                        <WrapPanel>
+                            <CheckBox x:Name="TbShowSelectCheck" Content="选择" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowRectangleCheck" Content="矩形" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowEllipseCheck" Content="椭圆" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowArrowCheck" Content="箭头" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowLineCheck" Content="直线" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowFreehandCheck" Content="画笔" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowNumberBadgeCheck" Content="序号" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowTextCheck" Content="文字" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowMosaicCheck" Content="马赛克" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowSpotlightCheck" Content="聚光灯" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowHighlightCheck" Content="荧光笔" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowEraserCheck" Content="橡皮擦" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                        </WrapPanel>
+                    </Border>
 
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="识别引擎与语言" Style="{StaticResource CardHeading}" />
-                                <DockPanel Margin="0,2,0,10">
+                    <TextBlock Text="编辑" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}" Padding="16,16,8,8">
+                        <WrapPanel>
+                            <CheckBox x:Name="TbShowUndoRedoCheck" Content="撤销 / 重做" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                        </WrapPanel>
+                    </Border>
+
+                    <TextBlock Text="输出与更多" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}" Padding="16,16,8,8">
+                        <WrapPanel>
+                            <CheckBox x:Name="TbShowLongshotCheck" Content="长截图" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowCopyCheck" Content="复制" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowSaveCheck" Content="保存" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowPinCheck" Content="贴图" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowOcrCheck" Content="文字识别" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                            <CheckBox x:Name="TbShowTranslateCheck" Content="翻译" Style="{StaticResource Pp.Chip}" Checked="OnToolbarVisibilityChanged" Unchecked="OnToolbarVisibilityChanged" />
+                        </WrapPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 5. 贴图 -->
+            <ScrollViewer x:Name="PagePin" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <TextBlock Text="贴图" Style="{StaticResource Pp.PageTitle}" />
+                    <TextBlock Text="钉在屏幕上的图片窗口的默认行为" Style="{StaticResource Pp.PageSubtitle}" />
+
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <TextBlock x:Name="PinOpacityVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" />
+                                    <Slider x:Name="PinOpacitySlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="10"
+                                            Maximum="100"
+                                            TickFrequency="5"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnPinSliderChanged" />
+                                    <TextBlock Text="默认不透明度" Style="{StaticResource Pp.RowTitle}" VerticalAlignment="Center" />
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
+                                    <TextBlock x:Name="PinMaxVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" />
+                                    <Slider x:Name="PinMaxSlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="1"
+                                            Maximum="100"
+                                            TickFrequency="1"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnPinSliderChanged" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="贴图数量上限" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="超出后自动关闭最早的一张" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="PinShadowCheck" Content="显示投影与细边框" Checked="OnPinChanged" Unchecked="OnPinChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="PinPixelCheck" Content="尽量保持 1:1 物理像素，保证清晰" Checked="OnPinChanged" Unchecked="OnPinChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="PinRestoreCheck" Content="下次启动时恢复未关闭的贴图" Checked="OnPinChanged" Unchecked="OnPinChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <CheckBox x:Name="PinTextSelectCheck" Checked="OnPinChanged" Unchecked="OnPinChanged">
+                                    <StackPanel>
+                                        <TextBlock Text="在贴图上划词复制（离线 OCR）" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="按住空格可暂时穿透，拖动窗口" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 6. 文字识别 -->
+            <ScrollViewer x:Name="PageOcr" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                <StackPanel MaxWidth="700" Margin="0,0,20,28">
+                    <TextBlock Text="文字识别" Style="{StaticResource Pp.PageTitle}" />
+                    <TextBlock Text="本地识别文字与二维码，全程不联网" Style="{StaticResource Pp.PageSubtitle}" />
+
+                    <TextBlock Text="识别引擎" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <DockPanel>
                                     <ComboBox x:Name="OcrEngineCombo"
                                               DockPanel.Dock="Right"
-                                              Width="240"
-                                              Padding="8,5"
+                                              Width="250"
                                               SelectionChanged="OnOcrChanged">
-                                        <ComboBoxItem Content="RapidOCR 本地引擎 (ONNX 推理)" Tag="RapidOcr" />
+                                        <ComboBoxItem Content="RapidOCR 本地引擎（ONNX）" Tag="RapidOcr" />
                                         <ComboBoxItem Content="Windows 系统内置 OCR" Tag="WindowsSystem" />
                                     </ComboBox>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock Text="首选离线引擎" />
-                                        <TextBlock Text="若自定义中英文模型未就绪，将自动回退或使用系统语言包" Style="{StaticResource MutedLabel}" />
+                                        <TextBlock Text="首选引擎" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="模型未就绪时会自动回退" Style="{StaticResource Pp.RowDesc}" />
                                     </StackPanel>
                                 </DockPanel>
-
-                                <TextBlock Text="优先语言列表（逗号分隔，例如 zh-Hans-CN, en-US）" Style="{StaticResource MutedLabel}" Margin="0,2,0,4" />
-                                <TextBox x:Name="OcrLangsBox" TextChanged="OnOcrChanged" />
-
-                                <CheckBox x:Name="DetectBarcodesCheck"
-                                          Margin="0,10,0,4"
-                                          Content="识别文字的同时自动检测二维码与条形码"
-                                          Checked="OnOcrChanged"
-                                          Unchecked="OnOcrChanged" />
-
-                                <DockPanel Margin="0,8,0,6">
-                                    <TextBlock x:Name="OcrIdleVal" DockPanel.Dock="Right" Width="76" TextAlignment="Right" VerticalAlignment="Center" />
-                                    <Slider x:Name="OcrIdleSlider" DockPanel.Dock="Right" Width="180" Minimum="0" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="OnOcrSliderChanged" />
-                                    <TextBlock Text="闲置自动卸载模型间隔" VerticalAlignment="Center" />
-                                </DockPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="模型文件与内存占用状态" Style="{StaticResource CardHeading}" />
-                                <TextBlock x:Name="OcrModelStatusText" Style="{StaticResource MutedLabel}" Margin="0,0,0,8" />
-                                <TextBlock x:Name="SystemOcrLangsText" Style="{StaticResource MutedLabel}" Margin="0,0,0,10" />
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="打开自定义模型目录" Padding="12,5" Margin="0,0,8,0" Click="OnOpenModelsDirClick" />
-                                    <Button Content="立即卸载内存中的模型" Padding="12,5" Click="OnUnloadOcrClick" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <StackPanel>
+                                    <TextBlock Text="优先语言" Style="{StaticResource Pp.RowTitle}" />
+                                    <TextBlock Text="用逗号分隔，例如 zh-Hans-CN, en-US" Style="{StaticResource Pp.RowDesc}" Margin="0,2,0,8" />
+                                    <TextBox x:Name="OcrLangsBox" TextChanged="OnOcrChanged" />
                                 </StackPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <CheckBox x:Name="DetectBarcodesCheck" Content="识别文字时同时检测二维码与条形码" Checked="OnOcrChanged" Unchecked="OnOcrChanged" />
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
+                                <DockPanel>
+                                    <TextBlock x:Name="OcrIdleVal" DockPanel.Dock="Right" Style="{StaticResource Pp.ValueText}" Width="72" />
+                                    <Slider x:Name="OcrIdleSlider"
+                                            DockPanel.Dock="Right"
+                                            Width="190"
+                                            Minimum="0"
+                                            Maximum="60"
+                                            TickFrequency="5"
+                                            IsSnapToTickEnabled="True"
+                                            ValueChanged="OnOcrSliderChanged" />
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="闲置后卸载模型" Style="{StaticResource Pp.RowTitle}" />
+                                        <TextBlock Text="释放内存，下次识别时自动重新加载" Style="{StaticResource Pp.RowDesc}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
 
-                <!-- 6. 翻译与大模型 -->
-                <Grid x:Name="PageTranslate" Visibility="Collapsed">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="翻译与大模型接口" Style="{StaticResource SectionTitle}" />
-                    <local:TranslateSettingsPanel x:Name="TranslatePanel" Grid.Row="1" />
-                </Grid>
-
-                <!-- 7. 关于与隐私 -->
-                <ScrollViewer x:Name="PageAbout" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="关于与隐私声明" Style="{StaticResource SectionTitle}" />
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock x:Name="AppVersionText" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,6" />
-                                <TextBlock TextWrapping="Wrap" LineHeight="21" Style="{StaticResource MutedLabel}">
-                                    Ppinpix 坚持「核心离线优先、数据完全由用户主控」原则：
-                                    &#10;1. 截图、标注、贴图、取色、离线 OCR 与扫码全部在本地完成，零后台遥测或自动更新联网。
-                                    &#10;2. 仅当您主动触发「截图翻译」或测试接口时，才会向您自己配置的 LLM 地址直连发送内容。
-                                    &#10;3. API 密钥与代理密码全部使用 Windows DPAPI（当前用户加密）保存，不会写入明文配置或日志。
-                                </TextBlock>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource CardBorder}">
-                            <StackPanel>
-                                <TextBlock Text="数据维护与诊断" Style="{StaticResource CardHeading}" />
+                    <TextBlock Text="模型状态" Style="{StaticResource Pp.GroupTitle}" />
+                    <Border Style="{StaticResource Pp.Card}">
+                        <StackPanel>
+                            <Border Style="{StaticResource Pp.Row}">
+                                <StackPanel>
+                                    <TextBlock x:Name="OcrModelStatusText" Style="{StaticResource Pp.RowDesc}" Margin="0" />
+                                    <TextBlock x:Name="SystemOcrLangsText" Style="{StaticResource Pp.RowDesc}" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource Pp.Row.Last}">
                                 <WrapPanel>
-                                    <Button Content="打开本地数据目录" Padding="12,6" Margin="0,0,8,8" Click="OnOpenAppDataClick" />
-                                    <Button Content="打开日志目录" Padding="12,6" Margin="0,0,8,8" Click="OnOpenLogsClick" />
-                                    <Button Content="导出配置备份 (ZIP · 已脱敏)" Padding="12,6" Margin="0,0,8,8" Click="OnExportBackupClick" />
-                                    <Button Content="恢复出厂默认设置"
-                                            Padding="12,6"
-                                            Margin="0,0,8,8"
-                                            Foreground="#FFF04438"
-                                            Click="OnFactoryResetClick" />
+                                    <Button Content="打开自定义模型目录" Margin="0,0,8,0" Click="OnOpenModelsDirClick" />
+                                    <Button Content="立即卸载内存中的模型" Click="OnUnloadOcrClick" />
                                 </WrapPanel>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- 7. 翻译与大模型 -->
+            <Grid x:Name="PageTranslate" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="翻译与模型" Style="{StaticResource Pp.PageTitle}" />
+                    <TextBlock Text="配置你自己的大模型接口，密钥仅保存在本机" Style="{StaticResource Pp.PageSubtitle}" />
+                </StackPanel>
+                <local:TranslateSettingsPanel x:Name="TranslatePanel" Grid.Row="1" Margin="0,0,20,16" />
             </Grid>
         </Grid>
-
-        <!-- 底部保存栏 -->
-        <Border Grid.Row="1"
-                Background="{DynamicResource Pp.Settings.CardBg}"
-                BorderBrush="{DynamicResource Pp.Settings.CardStroke}"
-                BorderThickness="0,1,0,0"
-                Padding="18,10">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Content="应用" Padding="16,6" Margin="0,0,8,0" Click="OnApplyClick" />
-                    <Button Content="保存并关闭"
-                            Padding="18,6"
-                            Background="#FF2F80FF"
-                            Foreground="White"
-                            BorderThickness="0"
-                            FontWeight="SemiBold"
-                            Click="OnSaveCloseClick" />
-                </StackPanel>
-                <TextBlock x:Name="FooterStatusText"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource MutedLabel}"
-                           Text="修改后点击「应用」或「保存并关闭」立即生效" />
-            </DockPanel>
-        </Border>
     </Grid>
 </Window>

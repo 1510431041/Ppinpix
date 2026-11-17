@@ -14,6 +14,7 @@ using Ppinpix.Core.Settings;
 using Ppinpix.LlmGateway.Models;
 using Ppinpix.Ocr;
 using Ppinpix.Ocr.Models;
+using Ppinpix.Theme;
 using Ppinpix.Translate;
 
 namespace Ppinpix.App.Translate;
@@ -58,6 +59,7 @@ public partial class TranslateWindow : Window
         OcrResult? precomputedOcr = null)
     {
         InitializeComponent();
+        ThemeLoader.ApplySettingsTheme(Resources, isDark: true);
 
         _sourceFrame = sourceFrame;
         _forceCompareView = forceCompareView;
@@ -366,7 +368,7 @@ public partial class TranslateWindow : Window
         _cleanTranslation = string.Empty;
         RetryBtn.Visibility = Visibility.Collapsed;
         StopBtn.Visibility = Visibility.Visible;
-        StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x8F, 0xB8, 0xFF));
+        StatusText.SetResourceReference(TextBlock.ForegroundProperty, "Pp.Accent");
         StatusText.Text = status;
         _cursorTimer.Start();
         UpdateTargetDisplay();
@@ -378,7 +380,7 @@ public partial class TranslateWindow : Window
         _cursorVisible = false;
         _cursorTimer.Stop();
         StopBtn.Visibility = Visibility.Collapsed;
-        StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xA3, 0xAB, 0xB8));
+        StatusText.SetResourceReference(TextBlock.ForegroundProperty, "Pp.Settings.TextSecondary");
         StatusText.Text = status;
         UpdateTargetDisplay();
     }
@@ -390,7 +392,7 @@ public partial class TranslateWindow : Window
         _cursorTimer.Stop();
         StopBtn.Visibility = Visibility.Collapsed;
         RetryBtn.Visibility = Visibility.Visible;
-        StatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xF0, 0x44, 0x38));
+        StatusText.SetResourceReference(TextBlock.ForegroundProperty, "Pp.Danger");
         StatusText.Text = message;
         UpdateTargetDisplay();
     }

@@ -232,16 +232,14 @@ public partial class TranslateSettingsPanel : UserControl
     {
         if (_selected is null) return;
         TestConnBtn.IsEnabled = false;
-        TestStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x8F, 0xB8, 0xFF));
+        TestStatusText.Foreground = Ppinpix.Theme.ThemeLoader.Brush("Pp.Accent");
         TestStatusText.Text = "正在发起实时流式连通性测试…";
 
         try
         {
             var tester = new ConnectionTester();
             var res = await tester.TestAsync(_selected);
-            TestStatusText.Foreground = new SolidColorBrush(res.Success
-                ? Color.FromRgb(0x2E, 0xB8, 0x72)
-                : Color.FromRgb(0xF0, 0x44, 0x38));
+            TestStatusText.Foreground = Ppinpix.Theme.ThemeLoader.Brush(res.Success ? "Pp.Success" : "Pp.Danger");
             TestStatusText.Text = res.Message;
         }
         finally
@@ -254,7 +252,7 @@ public partial class TranslateSettingsPanel : UserControl
     {
         if (_selected is null) return;
         FetchModelsBtn.IsEnabled = false;
-        TestStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x8F, 0xB8, 0xFF));
+        TestStatusText.Foreground = Ppinpix.Theme.ThemeLoader.Brush("Pp.Accent");
         TestStatusText.Text = "正在拉取模型列表…";
 
         try
@@ -268,12 +266,12 @@ public partial class TranslateSettingsPanel : UserControl
                 ModelCombo.Items.Add(m);
             }
             ModelCombo.Text = string.IsNullOrEmpty(current) && models.Count > 0 ? models[0] : current;
-            TestStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0x2E, 0xB8, 0x72));
+            TestStatusText.Foreground = Ppinpix.Theme.ThemeLoader.Brush("Pp.Success");
             TestStatusText.Text = $"已拉取 {models.Count} 个可用模型。";
         }
         catch (Exception ex)
         {
-            TestStatusText.Foreground = new SolidColorBrush(Color.FromRgb(0xF0, 0x44, 0x38));
+            TestStatusText.Foreground = Ppinpix.Theme.ThemeLoader.Brush("Pp.Danger");
             TestStatusText.Text = $"拉取失败：{ex.Message}";
         }
         finally

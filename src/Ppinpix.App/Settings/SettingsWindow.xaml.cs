@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 using Microsoft.Win32;
 using Ppinpix.App.Startup;
@@ -18,8 +19,12 @@ namespace Ppinpix.App.Settings;
 
 public partial class SettingsWindow : Window
 {
+    /// <summary>最后一次修改后多久自动保存（去抖，避免输入文字时频繁落盘 / 重注册热键）。</summary>
+    private static readonly TimeSpan AutoSaveDelay = TimeSpan.FromMilliseconds(600);
+
     private readonly Func<AppSettings, IReadOnlyList<HotkeyRegistrationResult>> _onApply;
     private readonly OcrService _ocrService;
+    private readonly DispatcherTimer _saveTimer;
     private AppSettings _working;
     private bool _loading = true;
     private bool _dirty;
@@ -35,6 +40,12 @@ public partial class SettingsWindow : Window
         _working = currentSettings.Clone();
         _ocrService = ocrService;
         _onApply = onApply;
+        _saveTimer = new DispatcherTimer { Interval = AutoSaveDelay };
+        _saveTimer.Tick += (_, _) =>
+        {
+            _saveTimer.Stop();
+            if (_dirty) ApplyCurrent();
+        };
 
         ApplyWindowTheme(_working.Ui.Theme);
         WireHotkeys();
@@ -46,6 +57,12 @@ public partial class SettingsWindow : Window
 
     public void SelectSection(string sectionTag)
     {
+        // 「关于与隐私」已并入「常规」页
+        if (string.Equals(sectionTag, "About", StringComparison.OrdinalIgnoreCase))
+        {
+            sectionTag = "General";
+        }
+
         foreach (var item in NavList.Items.OfType<ListBoxItem>())
         {
             if (string.Equals(item.Tag as string, sectionTag, StringComparison.OrdinalIgnoreCase))
@@ -143,7 +160,7 @@ public partial class SettingsWindow : Window
         // 翻译与大模型
         TranslatePanel.Bind(s, MarkDirty);
 
-        // 关于与隐私
+        // 关于
         var ver = Assembly.GetExecutingAssembly().GetName().Version;
         AppVersionText.Text = $"Ppinpix v{ver?.Major ?? 1}.{ver?.Minor ?? 0}.{ver?.Build ?? 0}（Windows 桌面端）";
 
@@ -171,10 +188,10 @@ public partial class SettingsWindow : Window
         PageGeneral.Visibility = tag == "General" ? Visibility.Visible : Visibility.Collapsed;
         PageHotkeys.Visibility = tag == "Hotkeys" ? Visibility.Visible : Visibility.Collapsed;
         PageCapture.Visibility = tag == "Capture" ? Visibility.Visible : Visibility.Collapsed;
+        PageToolbar.Visibility = tag == "Toolbar" ? Visibility.Visible : Visibility.Collapsed;
         PagePin.Visibility = tag == "Pin" ? Visibility.Visible : Visibility.Collapsed;
         PageOcr.Visibility = tag == "Ocr" ? Visibility.Visible : Visibility.Collapsed;
         PageTranslate.Visibility = tag == "Translate" ? Visibility.Visible : Visibility.Collapsed;
-        PageAbout.Visibility = tag == "About" ? Visibility.Visible : Visibility.Collapsed;
 
         if (tag == "Ocr")
         {
@@ -182,11 +199,14 @@ public partial class SettingsWindow : Window
         }
     }
 
+    /// <summary>标记有改动并（去抖）自动保存，不再需要手动点「应用」。</summary>
     private void MarkDirty()
     {
         if (_loading) return;
         _dirty = true;
-        FooterStatusText.Text = "存在未保存的修改（点击「应用」或「保存并关闭」立即生效）";
+        FooterStatusText.Text = "正在保存…";
+        _saveTimer.Stop();
+        _saveTimer.Start();
     }
 
     private void OnGeneralChanged(object sender, RoutedEventArgs e)
@@ -487,16 +507,9 @@ public partial class SettingsWindow : Window
         FooterStatusText.Text = "已恢复出厂默认设置并保存";
     }
 
-    private void OnApplyClick(object sender, RoutedEventArgs e) => ApplyCurrent();
-
-    private void OnSaveCloseClick(object sender, RoutedEventArgs e)
-    {
-        ApplyCurrent();
-        Close();
-    }
-
     private void ApplyCurrent()
     {
+        _saveTimer.Stop();
         var results = _onApply(_working.Clone());
         _dirty = false;
 
@@ -506,35 +519,23 @@ public partial class SettingsWindow : Window
             string desc = string.Join("；", failed.Select(f => $"{f.Name}={f.Gesture}"));
             HotkeyWarningText.Text = $"以下全局热键被其他软件占用，注册失败：{desc}";
             HotkeyWarningText.Visibility = Visibility.Visible;
-            FooterStatusText.Text = $"已保存设置，但部分热键冲突：{desc}";
+            FooterStatusText.Text = $"已保存，但部分热键冲突：{desc}";
         }
         else
         {
             CheckLocalHotkeyDuplicates();
-            FooterStatusText.Text = "设置已保存并立即生效";
+            FooterStatusText.Text = "已自动保存";
         }
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        // 自动保存：关闭时若还有未落盘的改动，直接保存，不再弹确认框
         if (_dirty)
         {
-            var r = MessageBox.Show(
-                this,
-                "存在尚未应用的设置更改，关闭前是否保存？",
-                "保存设置",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question);
-            if (r == MessageBoxResult.Cancel)
-            {
-                e.Cancel = true;
-                return;
-            }
-            if (r == MessageBoxResult.Yes)
-            {
-                ApplyCurrent();
-            }
+            ApplyCurrent();
         }
+        _saveTimer.Stop();
         base.OnClosing(e);
     }
 
