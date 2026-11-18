@@ -18,10 +18,13 @@ public sealed class SnapEngine
     private const int MaxCandidates = 24;
 
     private readonly List<WindowInfo> _targets;
+    private readonly WindowInfo[] _rootWindows;
 
     public SnapEngine(IEnumerable<WindowInfo> targets)
     {
-        _targets = [.. targets];
+        _targets = [.. targets.Where(target => !target.Bounds.IsEmpty)];
+        _rootWindows = _targets.Where(target => target.Level == SnapLevel.Window)
+            .OrderBy(target => target.ZOrder).ToArray();
     }
 
     public IReadOnlyList<WindowInfo> Targets => _targets;
@@ -29,19 +32,61 @@ public sealed class SnapEngine
     public bool IsEmpty => _targets.Count == 0;
 
     /// <summary>
-    /// 返回包含该点的所有候选，按面积从小到大排列。
+    /// 返回包含该点的最前层窗口内的候选，按面积从小到大排列。
     /// 索引 0 = 最具体（通常是按钮/输入框），越往后越粗（面板 → 窗口）。
     /// </summary>
     public IReadOnlyList<WindowInfo> Stack(PxPoint p)
     {
+        var front = FrontWindowAt(p);
+        if (front is null) return [];
+
         var hits = new List<WindowInfo>(8);
         foreach (var t in _targets)
         {
-            if (t.Bounds.Contains(p)) hits.Add(t);
+            if (t.RootHandle == front.RootHandle && t.Bounds.Contains(p)) hits.Add(t);
         }
 
-        hits.Sort(static (a, b) => a.Bounds.AreaPx.CompareTo(b.Bounds.AreaPx));
+        if (hits.Count <= 1) return hits;
+
+        hits.Sort(static (a, b) =>
+        {
+            int areaOrder = a.Bounds.AreaPx.CompareTo(b.Bounds.AreaPx);
+            if (areaOrder != 0) return areaOrder;
+
+            int depthOrder = b.Depth.CompareTo(a.Depth);
+            return depthOrder != 0 ? depthOrder : a.ZOrder.CompareTo(b.ZOrder);
+        });
         return hits;
+    }
+
+    private WindowInfo? FrontWindowAt(PxPoint point)
+    {
+        foreach (var window in _rootWindows)
+        {
+            if (window.Bounds.Contains(point)) return window;
+        }
+        return null;
+    }
+
+    private bool HasVisibleEdge(WindowInfo target, int edge, int start, int end, bool vertical)
+    {
+        // Right/Bottom 是半开边界，取边内的像素来判断该边是否被前方窗口遮住。
+        var bounds = target.Bounds;
+        edge = vertical ? Math.Clamp(edge, bounds.Left, bounds.Right - 1) : Math.Clamp(edge, bounds.Top, bounds.Bottom - 1);
+        int min = vertical ? bounds.Top : bounds.Left;
+        int max = vertical ? bounds.Bottom - 1 : bounds.Right - 1;
+        start = Math.Clamp(start, min, max);
+        end = Math.Clamp(end, min, max);
+        while (start <= end)
+        {
+            var front = FrontWindowAt(vertical ? new PxPoint(edge, start) : new PxPoint(start, edge));
+            if (front is null) return false;
+            if (front.RootHandle == target.RootHandle) return true;
+
+            // 跳过遮挡部分；移动整块选区时，只需对齐的边段有一部分可见。
+            start = vertical ? front.Bounds.Bottom : front.Bounds.Right;
+        }
+        return false;
     }
 
     /// <summary>
@@ -74,7 +119,7 @@ public sealed class SnapEngine
             return new SnapResult(selection, null, 0, 0);
         }
 
-        var candidates = NearCandidates(selection, thresholdPx);
+        var candidates = NearCandidates(new PxRect(movingCorner.X, movingCorner.Y, 1, 1), thresholdPx);
         if (candidates.Count == 0)
         {
             return new SnapResult(selection, null, 0, 0);
@@ -90,7 +135,10 @@ public sealed class SnapEngine
             foreach (int edge in (ReadOnlySpan<int>)[t.Bounds.Left, t.Bounds.Right])
             {
                 int d = edge - movingCorner.X;
-                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestDx))
+                if (Math.Abs(d) <= thresholdPx &&
+                    IsPointNearRange(movingCorner.Y, t.Bounds.Top, t.Bounds.Bottom, thresholdPx) &&
+                    Math.Abs(d) < Math.Abs(bestDx) &&
+                    HasVisibleEdge(t, edge, movingCorner.Y, movingCorner.Y, vertical: true))
                 {
                     bestDx = d;
                     bestX = t;
@@ -100,7 +148,10 @@ public sealed class SnapEngine
             foreach (int edge in (ReadOnlySpan<int>)[t.Bounds.Top, t.Bounds.Bottom])
             {
                 int d = edge - movingCorner.Y;
-                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestDy))
+                if (Math.Abs(d) <= thresholdPx &&
+                    IsPointNearRange(movingCorner.X, t.Bounds.Left, t.Bounds.Right, thresholdPx) &&
+                    Math.Abs(d) < Math.Abs(bestDy) &&
+                    HasVisibleEdge(t, edge, movingCorner.X, movingCorner.X, vertical: false))
                 {
                     bestDy = d;
                     bestY = t;
@@ -155,7 +206,8 @@ public sealed class SnapEngine
                      (ReadOnlySpan<(int, int)>)[(rect.Left, t.Bounds.Left), (rect.Right, t.Bounds.Right)])
             {
                 int d = targetEdge - rectEdge;
-                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestX))
+                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestX) &&
+                    HasVisibleEdge(t, targetEdge, rect.Top, rect.Bottom - 1, vertical: true))
                 {
                     bestX = d;
                     dx = d;
@@ -167,7 +219,8 @@ public sealed class SnapEngine
                      (ReadOnlySpan<(int, int)>)[(rect.Top, t.Bounds.Top), (rect.Bottom, t.Bounds.Bottom)])
             {
                 int d = targetEdge - rectEdge;
-                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestY))
+                if (Math.Abs(d) <= thresholdPx && Math.Abs(d) < Math.Abs(bestY) &&
+                    HasVisibleEdge(t, targetEdge, rect.Left, rect.Right - 1, vertical: false))
                 {
                     bestY = d;
                     dy = d;
@@ -183,7 +236,8 @@ public sealed class SnapEngine
     /// <summary>挑出与选区足够接近的候选，并按面积升序保留最具体的一批。</summary>
     private List<WindowInfo> NearCandidates(PxRect rect, int thresholdPx)
     {
-        var expanded = rect.Inflate(thresholdPx);
+        // 矩形是半开区间，多包含一像素，保留恰好相距阈值的边。
+        var expanded = rect.Inflate(thresholdPx + 1);
         var near = new List<WindowInfo>(16);
 
         foreach (var t in _targets)
@@ -199,4 +253,7 @@ public sealed class SnapEngine
 
         return near;
     }
+
+    private static bool IsPointNearRange(int value, int start, int end, int threshold) =>
+        (long)value >= (long)start - threshold && (long)value <= (long)end + threshold;
 }

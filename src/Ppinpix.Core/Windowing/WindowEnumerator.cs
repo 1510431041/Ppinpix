@@ -64,20 +64,24 @@ public sealed class WindowEnumerator
         WindowApi.EnumWindowsProc topLevel = (nint hwnd, nint _) =>
         {
             var root = hwnd;
-            if (!excluded.Contains(root) && TryGetWindowRect(root, out var windowRect) && IsSnapCandidate(root, windowRect, virtualBounds, MinWindowSizePx))
+            if (!excluded.Contains(root) && TryGetWindowRect(root, out var windowRect))
             {
-                result.Add(new WindowInfo(
-                    root, root, windowRect,
-                    GetTitle(root), GetClassName(root),
-                    SnapLevel.Window, 0, zOrder));
+                string className = GetClassName(root);
+                if (IsSnapCandidate(root, windowRect, virtualBounds, MinWindowSizePx, className))
+                {
+                    result.Add(new WindowInfo(
+                        root, root, windowRect,
+                        GetTitle(root), className,
+                        SnapLevel.Window, 0, zOrder));
+
+                    if (includeChildren)
+                    {
+                        CollectChildren(root, windowRect.Intersect(virtualBounds), excluded);
+                    }
+                }
             }
 
             zOrder++;
-
-            if (includeChildren)
-            {
-                CollectChildren(root, virtualBounds, excluded);
-            }
 
             return true;
         };
@@ -93,9 +97,15 @@ public sealed class WindowEnumerator
             try
             {
                 var uiaTargets = uiaCollector(virtualBounds, excluded);
-                if (uiaTargets.Count > 0)
+                var roots = result.Where(target => target.Level == SnapLevel.Window)
+                    .ToDictionary(target => target.Handle, target => target.Bounds.Intersect(virtualBounds));
+                foreach (var target in uiaTargets)
                 {
-                    result.AddRange(uiaTargets);
+                    // UIA 不能把已过滤的桌面宿主、隐藏窗口或其屏幕外控件重新加回来。
+                    if ((target.Handle != 0 && excluded.Contains(target.Handle)) ||
+                        !roots.TryGetValue(target.RootHandle, out var rootBounds)) continue;
+                    var bounds = target.Bounds.Intersect(rootBounds);
+                    if (!bounds.IsEmpty) result.Add(target with { Bounds = bounds });
                 }
             }
             catch (Exception ex)
@@ -109,20 +119,21 @@ public sealed class WindowEnumerator
 
     private readonly List<WindowInfo> _children = [];
 
-    private void CollectChildren(nint parent, PxRect virtualBounds, HashSet<nint> excluded)
+    private void CollectChildren(nint parent, PxRect rootBounds, HashSet<nint> excluded)
     {
         int childZ = 0;
         WindowApi.EnumWindowsProc childProc = (nint hwnd, nint _) =>
         {
             childZ++;
             if (excluded.Contains(hwnd)) return true;
-            if (!WindowApi.IsWindowVisible(hwnd)) return true;
             if (!TryGetWindowRect(hwnd, out var rect)) return true;
-            if (!IsSnapCandidate(hwnd, rect, virtualBounds, MinChildSizePx)) return true;
+            rect = rect.Intersect(rootBounds);
+            string className = GetClassName(hwnd);
+            if (!IsSnapCandidate(hwnd, rect, rootBounds, MinChildSizePx, className)) return true;
 
             _children.Add(new WindowInfo(
                 hwnd, parent, rect,
-                GetTitle(hwnd), GetClassName(hwnd),
+                GetTitle(hwnd), className,
                 SnapLevel.Child, 1, childZ));
 
             return true;
@@ -151,11 +162,15 @@ public sealed class WindowEnumerator
         return !rect.IsEmpty;
     }
 
-    private static bool IsSnapCandidate(nint hwnd, PxRect rect, PxRect virtualBounds, int minSizePx)
+    private static bool IsSnapCandidate(nint hwnd, PxRect rect, PxRect virtualBounds, int minSizePx, string className)
     {
+        if (!WindowApi.IsWindowVisible(hwnd)) return false;
         if (WindowApi.IsIconic(hwnd)) return false;
         if (rect.Width < minSizePx || rect.Height < minSizePx) return false;
         if (!rect.IntersectsWith(virtualBounds)) return false;
+
+        // 桌面宿主也会报告整屏矩形，但不是用户可见的应用窗口。
+        if (className is "Progman" or "WorkerW") return false;
 
         // 任务栏、输入法候选框等工具窗口不参与吸附。
         long exStyle = WindowApi.GetWindowLongPtr(hwnd, WindowApi.GWL_EXSTYLE).ToInt64();
